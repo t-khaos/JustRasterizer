@@ -83,7 +83,7 @@ void DrawTriangleByBarycentric(Triangle3f &triangle, std::vector<float> &zBuffer
 
 int main() {
 
-    Model model("../Resources/Models/african_head.obj");
+    Model model("../Resource/Model/african_head.obj");
 
 
     Film film(WIDTH, HEIGHT);
