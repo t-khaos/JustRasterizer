@@ -241,7 +241,7 @@ template<size_t ROW, size_t COL, typename T>
 inline Vector<ROW, T> operator*(const Matrix<ROW, COL, T> &m, const Vector<COL, T> &v) {
     Vector<ROW, T> temp;
     for (size_t row = 0; row < COL; row++)
-        temp[row] = Dot(v, m.GetCol(row));
+        temp[row] = Dot(v, m.GetRow(row));
     return temp;
 }
 

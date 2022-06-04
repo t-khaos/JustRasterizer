@@ -35,11 +35,11 @@ inline Matrix4f Rotate(const Vector3f &angles) {
 }
 
 //获取平移矩阵
-inline Matrix4f Translate(const Vector3f &distances) {
+inline Matrix4f Translate(const Vector3f &move) {
     return {
-            {1, 0, 0, distances.x},
-            {0, 1, 0, distances.y},
-            {0, 0, 1, distances.z},
+            {1, 0, 0, move.x},
+            {0, 1, 0, move.y},
+            {0, 0, 1, move.z},
             {0, 0, 0, 1}
     };
 }

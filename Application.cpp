@@ -1,10 +1,9 @@
 #include <iostream>
-#include "Math/Vector.h"
 #include "Renderer/Film.h"
 #include "Math/Global.h"
 #include "Object/Model.h"
 #include "Math/Math.h"
-#include "Math/Matrix.h"
+#include "Math/Transform.h"
 
 const Vector3f lightDir(0.0f, 0.0f, -1.0f);
 
@@ -95,6 +94,12 @@ int main() {
     std::vector<float> zBuffer(WIDTH * HEIGHT, -MAX_FLOAT);
 
 
+    Matrix4f rotateModel = Rotate({0.0f, -60.0f, 0.0f});
+    Matrix4f scaleModel = Scale({0.9f, 0.9f, 0.9f});
+    Matrix4f translateModel = Translate({0.0f, 0.0f, 0.0f});
+    Matrix4f M = translateModel * scaleModel * rotateModel;
+
+
     for (int k = 0; k < model.faces.size(); k++) {
         auto &face = model.faces[k];
 
@@ -102,8 +107,10 @@ int main() {
         Triangle3f triangle;
         for (int j = 0; j < 3; j++) {
             auto &v = model.positions[face[j].x];
-            screenCoords[j] = WorldToScreen(v);
-            triangle[j] = v;
+
+            auto position = M * v.Get4D();
+            screenCoords[j] = WorldToScreen(position.Get3D());
+            triangle[j] = position.Get3D();
         }
         Vector3f normal = Cross(
                 triangle[2] - triangle[0],

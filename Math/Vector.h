@@ -123,8 +123,12 @@ struct Vector<3, T> {
         return data[i];
     }
 
-    inline Vector<2,T> Get2D(){
-        return Vector<2,T>(x,y);
+    inline Vector<2, T> Get2D() {
+        return Vector<2, T>(x, y);
+    }
+
+    inline Vector<4, T> Get4D() {
+        return Vector<4, T>(x, y, z, 1);
     }
 };
 
@@ -160,6 +164,10 @@ struct Vector<4, T> {
     inline T &operator[](size_t i) {
         assert(i < 4);
         return data[i];
+    }
+
+    inline Vector<3, T> Get3D() {
+        return Vector<3, T>(x, y, z);
     }
 };
 
@@ -430,6 +438,7 @@ inline Vector<3, T> ToWorld(const Vector<3, T> &a, const Vector<3, T> &n) {
     auto V = Cross(N, U);
     return a.x * U + a.y * V + a.z * N;
 }
+
 //选取两矢量中最大的值组成新的矢量
 template<size_t N, typename T>
 inline Vector<N, T> MaxVector(const Vector<N, T> &a, const Vector<N, T> &b) {
@@ -439,6 +448,7 @@ inline Vector<N, T> MaxVector(const Vector<N, T> &a, const Vector<N, T> &b) {
 
     return temp;
 }
+
 //选取两矢量中最小的值组成新的矢量
 template<size_t N, typename T>
 inline Vector<N, T> MinVector(const Vector<N, T> &a, const Vector<N, T> &b) {
@@ -454,31 +464,33 @@ template<size_t N, typename T>
 inline Vector<N, T> MixVector(const Vector<N, T> &a, const Vector<N, T> &b, float t) {
     Vector<N, T> temp;
     for (size_t i = 0; i < N; i++)
-        temp[i] = (1.0f-t)*a[i] + t*b[i];
+        temp[i] = (1.0f - t) * a[i] + t * b[i];
 
     return temp;
 }
+
 //获取矢量中最大的值
 template<size_t N, typename T>
 inline T MaxValue(const Vector<N, T> &a) {
     T temp;
-    for (size_t i = 0; i < N-1; i++)
-        temp = a[i]>a[i+1]?a[i]:a[i+1];
+    for (size_t i = 0; i < N - 1; i++)
+        temp = a[i] > a[i + 1] ? a[i] : a[i + 1];
     return temp;
 }
+
 //获取矢量中最小的值
 template<size_t N, typename T>
 inline T MinValue(const Vector<N, T> &a) {
     T temp;
-    for (size_t i = 0; i < N-1; i++)
-        temp = a[i]<a[i+1]?a[i]:a[i+1];
+    for (size_t i = 0; i < N - 1; i++)
+        temp = a[i] < a[i + 1] ? a[i] : a[i + 1];
     return temp;
 }
 
 //获取矢量中最小的值
 template<size_t N, typename T>
 inline void SwapVector(Vector<N, T> &a, Vector<N, T> &b) {
-    for (size_t i = 0; i < N; i++){
+    for (size_t i = 0; i < N; i++) {
         T temp = a[i];
         a[i] = b[i];
         b[i] = temp;
@@ -495,7 +507,7 @@ inline void SwapValue(Vector<2, T> &a) {
 
 // 输出到文本流
 template<size_t N, typename T>
-inline std::ostream& operator << (std::ostream& stream, const Vector<N, T>& a) {
+inline std::ostream &operator<<(std::ostream &stream, const Vector<N, T> &a) {
     stream << "[";
     for (size_t i = 0; i < N; i++) {
         stream << a[i];
@@ -519,10 +531,10 @@ typedef Vector<2, float> Range2f;
 typedef Vector<3, int> Vector3i;
 typedef Vector<2, int> Point2i;
 
-typedef Vector<3, Vector<3,int>> Face3i;
+typedef Vector<3, Vector<3, int>> Face3i;
 
-typedef Vector<3, Vector<3,float>> Triangle3f;
-typedef Vector<3, Vector<2,int>> Triangle2i;
+typedef Vector<3, Vector<3, float>> Triangle3f;
+typedef Vector<3, Vector<2, int>> Triangle2i;
 
 
 
