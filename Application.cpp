@@ -85,6 +85,11 @@ int main() {
     Model model("../Resource/Model/african_head.obj");
 
 
+    const int width = 720;
+    const int height = 720;
+    const float aspectRatio = static_cast<float>(width) / height;
+    const float fov = 90;
+
     Film film(WIDTH, HEIGHT);
     std::vector<Color3f> pixels(WIDTH * HEIGHT, Color3f(0.0f));
 
@@ -94,11 +99,18 @@ int main() {
     std::vector<float> zBuffer(WIDTH * HEIGHT, -MAX_FLOAT);
 
 
-    Matrix4f rotateModel = Rotate({0.0f, -60.0f, 0.0f});
-    Matrix4f scaleModel = Scale({0.9f, 0.9f, 0.9f});
-    Matrix4f translateModel = Translate({0.0f, 0.0f, 0.0f});
-    Matrix4f M = translateModel * scaleModel * rotateModel;
+    Matrix4f M = Translate({0.0f, 0.0f, 0.0f})
+                 * Scale({1.0f, 1.0f, 1.0f})
+                 * Rotate({0.0f, 0.0f, 0.0f});
 
+    Vector3f origin(0.0f, 0.0f, 0.0f);
+    Vector3f target(0.0f, 0.0f, -1.0f);
+    Vector3f up(0.0f, 1.0f, 0.0f);
+    Matrix4f V = Translate({0.0f, 0.0f, 0.0f})
+                 * Rotate({0.0f, 0.0f, 0.0f})
+                 * LookAt(origin, target, up);
+
+    Matrix4f P = Perspective(aspectRatio, fov, -0.5f, -50.0f);
 
     for (int k = 0; k < model.faces.size(); k++) {
         auto &face = model.faces[k];
@@ -108,7 +120,10 @@ int main() {
         for (int j = 0; j < 3; j++) {
             auto &v = model.positions[face[j].x];
 
-            auto position = M * v.Get4D();
+            auto position = P * V * M * v.Get4D();
+
+            position = position / position.w;
+
             screenCoords[j] = WorldToScreen(position.Get3D());
             triangle[j] = position.Get3D();
         }
