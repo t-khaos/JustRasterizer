@@ -533,6 +533,7 @@ typedef Vector<2, int> Point2i;
 
 typedef Vector<3, Vector<3, int>> Face3i;
 
+typedef Vector<3, Vector<4, float>> Triangle4f;
 typedef Vector<3, Vector<3, float>> Triangle3f;
 typedef Vector<3, Vector<2, int>> Triangle2i;
 

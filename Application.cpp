@@ -36,21 +36,25 @@ std::tuple<float, float> Barycentric(const Triangle2i &triangle, const Point2i &
     auto &B = triangle[1];
     auto &C = triangle[2];
 
-    float gamma = static_cast<float >((A.y - B.y) * P.x + (B.x - A.x) * P.y + A.x * B.y - B.x * A.y)
-                  / ((A.y - B.y) * C.x + (B.x - A.x) * C.y + A.x * B.y - B.x * A.y);
+    float numerator = static_cast<float>((A.y - B.y) * P.x + (B.x - A.x) * P.y + A.x * B.y - B.x * A.y);
+    float denominator = static_cast<float>((A.y - B.y) * C.x + (B.x - A.x) * C.y + A.x * B.y - B.x * A.y);
 
-    float beta = static_cast<float >((A.y - C.y) * P.x + (C.x - A.x) * P.y + A.x * C.y - C.x * A.y)
-                 / ((A.y - C.y) * B.x + (C.x - A.x) * B.y + A.x * C.y - C.x * A.y);
+    float gamma = numerator / denominator;
+
+    numerator = static_cast<float>((A.y - C.y) * P.x + (C.x - A.x) * P.y + A.x * C.y - C.x * A.y);
+    denominator=static_cast<float>((A.y - C.y) * B.x + (C.x - A.x) * B.y + A.x * C.y - C.x * A.y);
+
+    float beta = numerator/denominator;
 
     return {beta, gamma};
 }
 
 
-void DrawTriangleByBarycentric(Triangle3f &triangle, std::vector<float> &zBuffer, std::vector<Color3f> &pixels, const Color3f &color) {
+void DrawTriangleByBarycentric(Triangle4f &triangle, std::vector<float> &zBuffer, std::vector<Color3f> &pixels, const Color3f &color) {
     //转为2D
     Triangle2i fragment;
     for (int i = 0; i < 3; i++)
-        fragment[i] = WorldToScreen(triangle[i]);
+        fragment[i] = WorldToScreen(triangle[i].Get3D());
 
     //包围盒最小坐标
     Point2i minVector = MinVector(fragment[0], MinVector(fragment[1], fragment[2]));
@@ -63,17 +67,21 @@ void DrawTriangleByBarycentric(Triangle3f &triangle, std::vector<float> &zBuffer
     for (P.x = minVector.x; P.x < maxVector.x; P.x++) {
         for (P.y = minVector.y; P.y < maxVector.y; P.y++) {
             auto [beta, gamma] = Barycentric(fragment, P);
-            if (beta < 0.0f || gamma < 0.0f || (beta + gamma) > 1.0f)
-                continue;
 
-            //插值z
-            float zValue = triangle[0].z * (1.0f - beta - gamma) + triangle[1].z * beta + triangle[2].z * gamma;
+            //beta,gamma可能算出0/0得NaN的情况
+            if (beta >= 0.0f && gamma >= 0.0f && (beta + gamma) <= 1.0f){
+                ///透视校正插值
+                float wValue = (1 - beta - gamma) / triangle[0].w + beta / triangle[1].w + gamma / triangle[2].w;
+                wValue = 1.0f / wValue;
+                float zValue = triangle[0].z * (1.0f - beta - gamma) + triangle[1].z * beta + triangle[2].z * gamma;
+                zValue *= wValue;
 
-            int index = P.y * WIDTH + P.x;
+                int index = P.y * WIDTH + P.x;
 
-            if (zBuffer[index] <= zValue) {
-                zBuffer[index] = zValue;
-                pixels[index] = color;
+                if (zBuffer[index] >= zValue) {
+                    zBuffer[index] = zValue;
+                    pixels[index] = color;
+                }
             }
         }
     }
@@ -88,7 +96,7 @@ int main() {
     const int width = 720;
     const int height = 720;
     const float aspectRatio = static_cast<float>(width) / height;
-    const float fov = 90;
+    const float fov = 45;
 
     Film film(WIDTH, HEIGHT);
     std::vector<Color3f> pixels(WIDTH * HEIGHT, Color3f(0.0f));
@@ -96,10 +104,10 @@ int main() {
     const Color3f WHITE(1.0f);
     const Color3f RED(1.0f, 0.0f, 0.0f);
 
-    std::vector<float> zBuffer(WIDTH * HEIGHT, -MAX_FLOAT);
+    std::vector<float> zBuffer(WIDTH * HEIGHT, MAX_FLOAT);
 
 
-    Matrix4f M = Translate({0.0f, 0.0f, 0.0f})
+    Matrix4f M = Translate({0.0f, 0.0f, -3.0f})
                  * Scale({1.0f, 1.0f, 1.0f})
                  * Rotate({0.0f, 0.0f, 0.0f});
 
@@ -110,26 +118,35 @@ int main() {
                  * Rotate({0.0f, 0.0f, 0.0f})
                  * LookAt(origin, target, up);
 
-    Matrix4f P = Perspective(aspectRatio, fov, -0.5f, -50.0f);
+    Matrix4f P = Perspective(aspectRatio, fov, 0.5f, 50.0f);
 
     for (int k = 0; k < model.faces.size(); k++) {
         auto &face = model.faces[k];
 
         Point2i screenCoords[3];
-        Triangle3f triangle;
+        Triangle4f triangle;
         for (int j = 0; j < 3; j++) {
             auto &v = model.positions[face[j].x];
 
+            //MVP变换
             auto position = P * V * M * v.Get4D();
 
-            position = position / position.w;
+            //齐次裁剪
 
+
+            //透视除法
+            //透视校正插值，保留w作为深度值
+            position.x = position.x / position.w;
+            position.y = position.y / position.w;
+            position.z = position.z / position.w;
+
+            //视口变换
             screenCoords[j] = WorldToScreen(position.Get3D());
-            triangle[j] = position.Get3D();
+            triangle[j] = position;
         }
         Vector3f normal = Cross(
-                triangle[2] - triangle[0],
-                triangle[1] - triangle[0]
+                triangle[2].Get3D() - triangle[0].Get3D(),
+                triangle[1].Get3D() - triangle[0].Get3D()
         );
 
         normal = Normalize(normal);

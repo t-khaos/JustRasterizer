@@ -56,15 +56,19 @@ inline Matrix4f Scale(const Vector3f &ratios) {
 
 //获取透视投影矩阵
 inline Matrix4f Perspective(float aspectRatio, float fov, float n, float f) {
-    float t = abs(tan(DegreeToRadian(fov / 2)) * n);
+    //参数far和near为远近平面的长度，即正值
+    float t = tan(DegreeToRadian(fov / 2)) * n;
     float r = t * aspectRatio;
 
-    return {
-            {n / r, 0,     0,                  0},
-            {0,     n / t, 0,                  0},
+    Matrix4f projection = {
+            {n / r, 0,     0,                 0},
+            {0,     n / t, 0,                 0},
             {0,     0,     -(n + f) / (f - n), -2 * f * n / (f - n)},
-            {0,     0,     -1,                 0}
+            {0,     0,     -1,                0}
     };
+
+
+    return projection;
 }
 
 //获取摄像机朝向矩阵
