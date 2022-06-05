@@ -6,18 +6,16 @@
 #include <sstream>
 #include "../Include/TGA/tgaimage.h"
 #include "../Include/JustMath/Vector.h"
-#include "../Common/Object.h"
+#include "../Common/VertexShader.h"
+#include "../Common/FragmenShader.h"
 
 
-struct Model : Object {
+struct Model {
     std::vector<Vector3f> positions;
     std::vector<Face3i> faces;
     std::vector<Vector2f> uvs;
     std::vector<Vector3f> normals;
 
-    TGAImage diffuseMap;
-
-    Model(const std::string &fileName);
-
-    void LoadTexture(const std::string &fileName);
+    std::shared_ptr<VertexShader> vShader;
+    std::shared_ptr<FragmentShader> fShader;
 };

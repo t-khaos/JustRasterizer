@@ -123,11 +123,11 @@ struct Vector<3, T> {
         return data[i];
     }
 
-    inline Vector<2, T> Get2D() {
+    inline Vector<2, T> Get2D() const{
         return Vector<2, T>(x, y);
     }
 
-    inline Vector<4, T> Get4D() {
+    inline Vector<4, T> Get4D() const{
         return Vector<4, T>(x, y, z, 1);
     }
 };
@@ -166,7 +166,7 @@ struct Vector<4, T> {
         return data[i];
     }
 
-    inline Vector<3, T> Get3D() {
+    inline Vector<3, T> Get3D() const {
         return Vector<3, T>(x, y, z);
     }
 };
@@ -519,7 +519,8 @@ inline std::ostream &operator<<(std::ostream &stream, const Vector<N, T> &a) {
 
 //特化矢量别名
 //------------------------------------------
-
+typedef Vector<4, float> Vector4f;
+typedef Vector<4, float> Point4f;
 
 typedef Vector<3, float> Vector3f;
 typedef Vector<3, float> Point3f;
@@ -532,6 +533,7 @@ typedef Vector<3, int> Vector3i;
 typedef Vector<2, int> Point2i;
 
 typedef Vector<3, Vector<3, int>> Face3i;
+
 
 
 

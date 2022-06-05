@@ -24,9 +24,8 @@ add_executable(
         Renderer/Camera.h
         Renderer/Scene.h
 
-        Common/Object.h
-        Common/Shader.h
+        Common/VertexShader.h
         Common/Vertex.h
 
         Include/TGA/tgaimage.h Include/TGA/tgaimage.cpp
-        Object/Model.cpp)
+        Common/Loader.h Common/FragmenShader.h Shader/DefaultVertexShader.h Shader/DefaultFragmentShader.h Shader/DefaultVertexShader.cpp Shader/DefaultFragmentShader.cpp)

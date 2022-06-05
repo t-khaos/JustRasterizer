@@ -4,8 +4,8 @@
 #include "../Include/JustMath/Vector.h"
 
 struct Vertex{
-    Point3f position;
-    Vector3f normal;
+    Point4f position;
+    Vector4f normal;
     Point2f uv;
     float w;
 };

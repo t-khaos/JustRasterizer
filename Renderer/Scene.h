@@ -1,13 +1,12 @@
-#pragma once;
+#pragma once
 
 #include <memory>
 #include <vector>
-#include "../Common/Object.h"
 
-struct Scene{
-    std::vector<std::shared_ptr<Object>> objects;
-    //透明物体
-    std::vector<std::shared_ptr<Object>> transparentObjects;
+struct Scene {
+    std::vector<std::shared_ptr<Model>> models;
 
-    void AddModel();
+    Scene():models({}){}
+
+    void AddModel(std::shared_ptr<Model> model) { models.push_back(model); }
 };
