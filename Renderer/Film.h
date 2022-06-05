@@ -3,16 +3,21 @@
 #include <vector>
 #include <string>
 
-#include "../Math/Vector.h"
+#include "../Include/JustMath/Vector.h"
+#include "../Include/TGA/tgaimage.h"
 
 
 struct Film {
-    std::string fileName;
     int width;
     int height;
+    std::vector<Color3f> pixels;
+    TGAImage image;
 
     Film(const int &_w, const int &_h)
-            : width(_w), height(_h), fileName("output.ppm") {}
+            : width(_w), height(_h){
+        pixels = std::vector<Color3f>(width*height,Color3f(0.0f));
+        image = TGAImage(width, height, TGAImage::RGB);
+    }
 
-    void Develop(const std::vector<Color3f> &pixels) const;
+    void Develop(std::string fileName);
 };

@@ -12,11 +12,11 @@ add_executable(
 
         Renderer/Film.h Renderer/Film.cpp
 
-        Math/Vector.h
-        Math/Math.h
-        Math/Global.h
-        Math/Matrix.h
-        Math/Transform.h
+        Include/JustMath/Vector.h
+        Include/JustMath/Math.h
+        Include/JustMath/Global.h
+        Include/JustMath/Matrix.h
+        Include/JustMath/Transform.h
 
         Object/Model.h
 

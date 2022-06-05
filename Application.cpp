@@ -1,9 +1,9 @@
 #include <iostream>
 #include "Renderer/Film.h"
-#include "Math/Global.h"
+#include "Include/JustMath/Global.h"
 #include "Object/Model.h"
-#include "Math/Math.h"
-#include "Math/Transform.h"
+#include "Include/JustMath/Math.h"
+#include "Include/JustMath/Transform.h"
 #include "Common/Vertex.h"
 
 const Vector3f lightDir(0.0f, 0.0f, 1.0f);
@@ -100,22 +100,19 @@ void DrawTriangleByBarycentric(Vector<3, Vertex> &t, std::vector<float> &zBuffer
 
 
 int main() {
-
-    Model model("../Resource/Model/african_head.obj");
-
-
     const int width = 720;
     const int height = 720;
     const float aspectRatio = static_cast<float>(width) / height;
     const float fov = 45;
 
-    Film film(WIDTH, HEIGHT);
-    std::vector<Color3f> pixels(WIDTH * HEIGHT, Color3f(0.0f));
+    Film film(width, height);
+
+    Model model("../Resource/Model/african_head.obj");
+
 
     const Color3f WHITE(1.0f);
-    const Color3f RED(1.0f, 0.0f, 0.0f);
 
-    std::vector<float> zBuffer(WIDTH * HEIGHT, MAX_FLOAT);
+    std::vector<float> zBuffer(width * height, MAX_FLOAT);
 
 
     Matrix4f M = Translate({0.0f, 0.0f, -3.0f})
@@ -157,7 +154,7 @@ int main() {
             //视口变换
             screenCoords[j] = WorldToScreen(triangle[j].position);
         }
-        DrawTriangleByBarycentric(triangle, zBuffer, pixels, WHITE);
+        DrawTriangleByBarycentric(triangle, zBuffer, film.pixels, WHITE);
     }
-    film.Develop(pixels);
+    film.Develop("output.tga");
 }

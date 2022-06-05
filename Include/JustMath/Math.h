@@ -3,7 +3,7 @@
 
 #include <cmath>
 #include <algorithm>
-#include "../../JustTracer/Math/Global.h"
+#include "../../../JustTracer/Math/Global.h"
 #include "Global.h"
 
 

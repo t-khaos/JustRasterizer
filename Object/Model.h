@@ -4,8 +4,8 @@
 #include <string>
 #include <fstream>
 #include <sstream>
-#include "/Include/TGA/tgaimage.h"
-#include "../Math/Vector.h"
+#include "../Include/TGA/tgaimage.h"
+#include "../Include/JustMath/Vector.h"
 #include "../Common/Object.h"
 
 struct Model : Object {

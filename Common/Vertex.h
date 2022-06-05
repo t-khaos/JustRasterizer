@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include "../Math/Vector.h"
+#include "../Include/JustMath/Vector.h"
 
 struct Vertex{
     Point3f position;
