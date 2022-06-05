@@ -4,8 +4,9 @@
 #include "Object/Model.h"
 #include "Math/Math.h"
 #include "Math/Transform.h"
+#include "Common/Vertex.h"
 
-const Vector3f lightDir(0.0f, 0.0f, -1.0f);
+const Vector3f lightDir(0.0f, 0.0f, 1.0f);
 
 //Bresenham画线算法
 void DrawLine(Point2i &p0, Point2i &p1, std::vector<Color3f> &pixels, const Color3f &color) {
@@ -31,7 +32,7 @@ void DrawLine(Point2i &p0, Point2i &p1, std::vector<Color3f> &pixels, const Colo
     std::cout << "Draw Done." << std::endl;
 }
 
-std::tuple<float, float> Barycentric(const Triangle2i &triangle, const Point2i &P) {
+std::tuple<float, float> Barycentric(const Vector<3, Vector<2, int>> &triangle, const Point2i &P) {
     auto &A = triangle[0];
     auto &B = triangle[1];
     auto &C = triangle[2];
@@ -42,19 +43,18 @@ std::tuple<float, float> Barycentric(const Triangle2i &triangle, const Point2i &
     float gamma = numerator / denominator;
 
     numerator = static_cast<float>((A.y - C.y) * P.x + (C.x - A.x) * P.y + A.x * C.y - C.x * A.y);
-    denominator=static_cast<float>((A.y - C.y) * B.x + (C.x - A.x) * B.y + A.x * C.y - C.x * A.y);
+    denominator = static_cast<float>((A.y - C.y) * B.x + (C.x - A.x) * B.y + A.x * C.y - C.x * A.y);
 
-    float beta = numerator/denominator;
+    float beta = numerator / denominator;
 
     return {beta, gamma};
 }
 
-
-void DrawTriangleByBarycentric(Triangle4f &triangle, std::vector<float> &zBuffer, std::vector<Color3f> &pixels, const Color3f &color) {
+void DrawTriangleByBarycentric(Vector<3, Vertex> &t, std::vector<float> &zBuffer, std::vector<Color3f> &pixels, const Color3f &color) {
     //转为2D
-    Triangle2i fragment;
+    Vector<3, Vector<2, int>> fragment;
     for (int i = 0; i < 3; i++)
-        fragment[i] = WorldToScreen(triangle[i].Get3D());
+        fragment[i] = WorldToScreen(t[i].position);
 
     //包围盒最小坐标
     Point2i minVector = MinVector(fragment[0], MinVector(fragment[1], fragment[2]));
@@ -69,18 +69,29 @@ void DrawTriangleByBarycentric(Triangle4f &triangle, std::vector<float> &zBuffer
             auto [beta, gamma] = Barycentric(fragment, P);
 
             //beta,gamma可能算出0/0得NaN的情况
-            if (beta >= 0.0f && gamma >= 0.0f && (beta + gamma) <= 1.0f){
+            if (beta >= 0.0f && gamma >= 0.0f && (beta + gamma) <= 1.0f) {
+                float alpha = 1 - beta - gamma;
+
+                //法线插值
+                Vector3f normal = t[0].normal * alpha + t[1].normal * beta + t[2].normal * gamma;
+
+                float NdotV = Dot(normal, lightDir);
+
+
+                //UV插值
+                Point2f uv = t[0].uv * alpha + t[1].uv * beta + t[2].uv * gamma;
+
                 ///透视校正插值
-                float wValue = (1 - beta - gamma) / triangle[0].w + beta / triangle[1].w + gamma / triangle[2].w;
+                float wValue = alpha / t[0].w + beta / t[1].w + gamma / t[2].w;
                 wValue = 1.0f / wValue;
-                float zValue = triangle[0].z * (1.0f - beta - gamma) + triangle[1].z * beta + triangle[2].z * gamma;
+                float zValue = t[0].position.z * alpha + t[1].position.z * beta + t[2].position.z * gamma;
                 zValue *= wValue;
 
                 int index = P.y * WIDTH + P.x;
 
-                if (zBuffer[index] >= zValue) {
+                if (zBuffer[index] > zValue) {
                     zBuffer[index] = zValue;
-                    pixels[index] = color;
+                    pixels[index] = color * NdotV;
                 }
             }
         }
@@ -124,42 +135,29 @@ int main() {
         auto &face = model.faces[k];
 
         Point2i screenCoords[3];
-        Triangle4f triangle;
+        Vector<3, Vertex> triangle;
         for (int j = 0; j < 3; j++) {
-            auto &v = model.positions[face[j].x];
+
+            auto &position = model.positions[face[j].x];
+            auto &uv = model.uvs[face[j].y];
+            auto &normal = model.normals[face[j].z];
 
             //MVP变换
-            auto position = P * V * M * v.Get4D();
+            auto position4d = P * V * M * position.Get4D();
 
             //齐次裁剪
 
-
-            //透视除法
             //透视校正插值，保留w作为深度值
-            position.x = position.x / position.w;
-            position.y = position.y / position.w;
-            position.z = position.z / position.w;
+            triangle[j].w = position4d.w;
+            //透视除法
+            triangle[j].position = position4d.Get3D() / position4d.w;
+            triangle[j].uv = uv;
+            triangle[j].normal = normal;
 
             //视口变换
-            screenCoords[j] = WorldToScreen(position.Get3D());
-            triangle[j] = position;
+            screenCoords[j] = WorldToScreen(triangle[j].position);
         }
-        Vector3f normal = Cross(
-                triangle[2].Get3D() - triangle[0].Get3D(),
-                triangle[1].Get3D() - triangle[0].Get3D()
-        );
-
-        normal = Normalize(normal);
-
-        float NdotV = Dot(normal, lightDir);
-
-        if (NdotV > 0) {
-            //DrawTriangleByLine(screenCoords[0], screenCoords[1], screenCoords[2], pixels, WHITE * NdotV);
-            DrawTriangleByBarycentric(triangle, zBuffer, pixels, WHITE * NdotV);
-        }
-
+        DrawTriangleByBarycentric(triangle, zBuffer, pixels, WHITE);
     }
-
     film.Develop(pixels);
-
 }
