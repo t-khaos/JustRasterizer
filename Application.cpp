@@ -1,36 +1,11 @@
 #include <iostream>
 #include "Renderer/Film.h"
-#include "Include/JustMath/Global.h"
 #include "Object/Model.h"
 #include "Include/JustMath/Math.h"
 #include "Include/JustMath/Transform.h"
 #include "Common/Vertex.h"
 
 const Vector3f lightDir(0.0f, 0.0f, 1.0f);
-
-//Bresenham画线算法
-void DrawLine(Point2i &p0, Point2i &p1, std::vector<Color3f> &pixels, const Color3f &color) {
-    //斜率
-    bool flag = false;
-    if (std::abs(p0.x - p1.x) < std::abs(p0.y - p1.y)) {
-        SwapValue(p0);
-        SwapValue(p1);
-        flag = true;
-    }
-    //顺序
-    if (p0.x > p1.x)
-        SwapVector(p0, p1);
-
-    for (int x = p0.x; x <= p1.x; x++) {
-        float t = (x - p0.x) / (float) (p1.x - p0.x);
-        int y = p0.y * (1.0f - t) + p1.y * t;
-        if (flag)
-            pixels[x * WIDTH + y] = color;
-        else
-            pixels[y * WIDTH + x] = color;
-    }
-    std::cout << "Draw Done." << std::endl;
-}
 
 std::tuple<float, float> Barycentric(const Vector<3, Vector<2, int>> &triangle, const Point2i &P) {
     auto &A = triangle[0];
@@ -50,18 +25,18 @@ std::tuple<float, float> Barycentric(const Vector<3, Vector<2, int>> &triangle, 
     return {beta, gamma};
 }
 
-void DrawTriangleByBarycentric(Vector<3, Vertex> &t, std::vector<float> &zBuffer, std::vector<Color3f> &pixels, const Color3f &color) {
-    //转为2D
+void DrawTriangleByBarycentric(Vector<3, Vertex> &t, std::vector<float> &zBuffer, Film &film, TGAImage &diffuseMap) {
+    //视口变换
     Vector<3, Vector<2, int>> fragment;
     for (int i = 0; i < 3; i++)
-        fragment[i] = WorldToScreen(t[i].position);
+        fragment[i] = WorldToScreen(t[i].position, film.width, film.height);
 
     //包围盒最小坐标
     Point2i minVector = MinVector(fragment[0], MinVector(fragment[1], fragment[2]));
     minVector = MaxVector(Point2i(0), minVector);
     //包围盒最大坐标
     Point2i maxVector = MaxVector(fragment[0], MaxVector(fragment[1], fragment[2]));
-    maxVector = MinVector(Point2i(WIDTH - 1, HEIGHT - 1), maxVector);
+    maxVector = MinVector(Point2i(film.width - 1, film.height - 1), maxVector);
 
     Point2i P;
     for (P.x = minVector.x; P.x < maxVector.x; P.x++) {
@@ -76,10 +51,12 @@ void DrawTriangleByBarycentric(Vector<3, Vertex> &t, std::vector<float> &zBuffer
                 Vector3f normal = t[0].normal * alpha + t[1].normal * beta + t[2].normal * gamma;
 
                 float NdotV = Dot(normal, lightDir);
-
+                if (NdotV < 0)
+                    return;
 
                 //UV插值
                 Point2f uv = t[0].uv * alpha + t[1].uv * beta + t[2].uv * gamma;
+                TGAColor diffuseColor = diffuseMap.get(uv.x * film.width, uv.y * film.height);
 
                 ///透视校正插值
                 float wValue = alpha / t[0].w + beta / t[1].w + gamma / t[2].w;
@@ -87,11 +64,11 @@ void DrawTriangleByBarycentric(Vector<3, Vertex> &t, std::vector<float> &zBuffer
                 float zValue = t[0].position.z * alpha + t[1].position.z * beta + t[2].position.z * gamma;
                 zValue *= wValue;
 
-                int index = P.y * WIDTH + P.x;
+                int index = P.y * film.width + P.x;
 
                 if (zBuffer[index] > zValue) {
                     zBuffer[index] = zValue;
-                    pixels[index] = color * NdotV;
+                    film.image.set(P.x, P.y, TGAColor(diffuseColor.r * NdotV, diffuseColor.g * NdotV, diffuseColor.b * NdotV));
                 }
             }
         }
@@ -100,24 +77,22 @@ void DrawTriangleByBarycentric(Vector<3, Vertex> &t, std::vector<float> &zBuffer
 
 
 int main() {
-    const int width = 720;
-    const int height = 720;
+    const int width = 1024;
+    const int height = 1024;
     const float aspectRatio = static_cast<float>(width) / height;
     const float fov = 45;
 
     Film film(width, height);
 
     Model model("../Resource/Model/african_head.obj");
-
-
-    const Color3f WHITE(1.0f);
+    model.LoadTexture("../Resource/Texture/african_head_diffuse.tga");
 
     std::vector<float> zBuffer(width * height, MAX_FLOAT);
 
 
     Matrix4f M = Translate({0.0f, 0.0f, -3.0f})
                  * Scale({1.0f, 1.0f, 1.0f})
-                 * Rotate({0.0f, 0.0f, 0.0f});
+                 * Rotate({0.0f, 60.0f, 0.0f});
 
     Vector3f origin(0.0f, 0.0f, 0.0f);
     Vector3f target(0.0f, 0.0f, -1.0f);
@@ -131,7 +106,6 @@ int main() {
     for (int k = 0; k < model.faces.size(); k++) {
         auto &face = model.faces[k];
 
-        Point2i screenCoords[3];
         Vector<3, Vertex> triangle;
         for (int j = 0; j < 3; j++) {
 
@@ -142,6 +116,8 @@ int main() {
             //MVP变换
             auto position4d = P * V * M * position.Get4D();
 
+            auto normal4d = P * V * M * normal.Get4D();
+
             //齐次裁剪
 
             //透视校正插值，保留w作为深度值
@@ -149,12 +125,9 @@ int main() {
             //透视除法
             triangle[j].position = position4d.Get3D() / position4d.w;
             triangle[j].uv = uv;
-            triangle[j].normal = normal;
-
-            //视口变换
-            screenCoords[j] = WorldToScreen(triangle[j].position);
+            triangle[j].normal = normal4d.Get3D() / normal4d.w;
         }
-        DrawTriangleByBarycentric(triangle, zBuffer, film.pixels, WHITE);
+        DrawTriangleByBarycentric(triangle, zBuffer, film, model.diffuseMap);
     }
     film.Develop("output.tga");
 }

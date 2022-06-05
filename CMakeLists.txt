@@ -26,8 +26,7 @@ add_executable(
 
         Common/Object.h
         Common/Shader.h
-        Common/Texture.h
         Common/Vertex.h
 
         Include/TGA/tgaimage.h Include/TGA/tgaimage.cpp
-)
+        Object/Model.cpp)
