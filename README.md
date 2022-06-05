@@ -24,7 +24,36 @@
 > 13. [pbrt - 众所周知的圣经](https://www.pbr-book.org/3ed-2018/contents)
 
 ## TODO
+- 纹理尺寸问题
+- 应用阶段设置MVP数据
+- 分离出三角形/面类型
+- 分理出纹理类型
 
 ## Feature
+- [ ] 模型相关
+  - [x] Vertex 顶点
+  - [ ] Triangle 三角形
+  - [ ] Mesh 网格
+  - [x] Model 模型
+  - [ ] Texture 纹理
+- [x] 渲染器相关
+  - [x] Film 胶卷
+  - [x] Camera 相机
+  - [x] Scene 场景
+  - [x] Renderer 渲染器
+- [ ] 着色器相关
+  - [x] BaseShader 着色器基类
+  - [x] Default 默认着色器
+  - [ ] Phong 冯模型
+  - [ ] Blinn-Phong 布林冯模型
+  - [ ] Mircofacet 微表面模型
+- [x] 数学相关
+  - [x] Global 全局定义
+  - [x] Math 数据工具函数
+  - [x] Vector 向量模板
+  - [x] Matrix 矩阵模板
+  - [x] Transform 变换工具函数
 
-##
+## Dependence
+
+- Tinny Render 中的 TGA 格式图片解析库
