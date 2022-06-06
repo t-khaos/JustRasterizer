@@ -1,7 +1,7 @@
 
 #include "DefaultFragmentShader.h"
 
-TGAColor DefaultFragmentShader::FragmentShading(Vertex &vertex){
+TGAColor DefaultFragmentShader::FragmentShading(){
     float NdotL = Dot(normal, lightDir);
     if (NdotL < 0)
         return TGAColor(0, 0, 0);

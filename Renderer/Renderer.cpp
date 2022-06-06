@@ -26,6 +26,7 @@ void Renderer::Render() const {
             Vector<3, Vertex> triangle;
             Vector<3, Vector<2, int>> fragment;
 
+            bool isClipped = false;
             //应用阶段
             //---------------------------------------------------------------------------------------
             //遍历所有顶点
@@ -35,14 +36,15 @@ void Renderer::Render() const {
                 vertex.position = model->positions[face[i].x];
                 vertex.uv = model->uvs[face[i].y];
                 vertex.normal = model->normals[face[i].z];
-                //透视校正插值，保留w1作为顶点深度值
-                vertex.w1 = 1;
-                vertex.w2 = 1;
+                //透视校正插值，保留w作为顶点深度值
+                vertex.w = 1;
 
-                //设置变换矩阵
+                //设置MVP变换矩阵
                 model->vShader->MVP = P * V * M;
+                //设置法线变换矩阵：模型变换矩阵的伴随矩阵的转置
+                model->vShader->N = Invert(M).Transpose();
                 //设置光照
-                model->fShader->lightDir = Vector3f (0,0,1);
+                model->fShader->lightDir = Vector3f(0, 0, 1);
 
                 //几何阶段
                 //---------------------------------------------------------------------------------------
@@ -54,18 +56,29 @@ void Renderer::Render() const {
 
                 //齐次裁剪
                 //-----------------------------------------------
-
+                //TODO: 在CVV上的三角形，顶点应重新规划。
+                //简单剔除超出CVV的三角形
+                float w = vertex.w;
+                if (vertex.position.x > w || vertex.position.x < -w
+                    || vertex.position.y > w || vertex.position.y < -w
+                    || vertex.position.z > w || vertex.position.z < 0.0f
+                    || w == 0) {
+                    isClipped = true;
+                }
 
                 //透视除法
                 //-----------------------------------------------
                 //为保证流水线的直观，故在这里做透视除法
-                vertex.position /= vertex.w1;
-                vertex.normal /= vertex.w2;
+                vertex.position /= vertex.w;
 
                 //屏幕映射
                 //-----------------------------------------------
                 fragment[i] = Transform::Viewport(vertex.position, film->width, film->height);
             }
+
+            //简单剔除超出CVV的三角形
+            if(isClipped)
+                continue;
 
             //光栅化阶段
             //---------------------------------------------------------------------------------------
@@ -97,24 +110,24 @@ void Renderer::Render() const {
                                      + triangle[1].uv * beta
                                      + triangle[2].uv * gamma;
 
-                        Vertex vertex;
-                        vertex.normal = normal;
-                        vertex.uv = uv;
+
                         model->fShader->normal = normal;
                         //此处应该换成纹理的尺寸
                         model->fShader->uv = Point2i(uv.x * film->width, uv.y * film->height);
 
                         //像素着色
                         //-----------------------------------------------
-                        TGAColor color = model->fShader->FragmentShading(vertex);
+                        TGAColor color = model->fShader->FragmentShading();
 
-                        //透视校正插值
-                        float wValue = alpha / triangle[0].w1 + beta / triangle[1].w1 + gamma / triangle[2].w1;
+                        //融合
+                        //-----------------------------------------------
+
+                        //深度测试
+                        // 1/w与屏幕空间为线性关系，故可以用中心坐标进行插值
+                        float wValue = alpha / triangle[0].w + beta / triangle[1].w + gamma / triangle[2].w;
                         wValue = 1.0f / wValue;
                         float zValue = triangle[0].position.z * alpha + triangle[1].position.z * beta + triangle[2].position.z * gamma;
                         zValue *= wValue;
-
-                        //写入Z-Buffer
                         int index = point.y * film->width + point.x;
                         if (film->zBuffer[index] > zValue) {
                             film->zBuffer[index] = zValue;
@@ -124,8 +137,6 @@ void Renderer::Render() const {
                     }
                 }
             }
-            //融合
-            //-----------------------------------------------
         }
     }
 

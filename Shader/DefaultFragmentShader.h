@@ -6,5 +6,5 @@ struct DefaultFragmentShader : FragmentShader {
 
     DefaultFragmentShader() {}
 
-    virtual TGAColor FragmentShading(Vertex &vertex) override;
+    virtual TGAColor FragmentShading() override;
 };

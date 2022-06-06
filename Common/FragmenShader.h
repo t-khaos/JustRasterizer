@@ -14,5 +14,5 @@ struct FragmentShader : Shader {
     std::shared_ptr<TGAColor> normalMap;
     std::shared_ptr<TGAColor> specularMap;
 
-    virtual TGAColor FragmentShading(Vertex &vertex) = 0;
+    virtual TGAColor FragmentShading() = 0;
 };
