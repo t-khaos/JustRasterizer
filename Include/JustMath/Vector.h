@@ -165,6 +165,9 @@ struct Vector<4, T> {
         assert(i < 4);
         return data[i];
     }
+    inline Vector<2, T> Get2D() const {
+        return Vector<2, T>(x, y);
+    }
 
     inline Vector<3, T> Get3D() const {
         return Vector<3, T>(x, y, z);
