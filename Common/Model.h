@@ -6,8 +6,8 @@
 #include <sstream>
 #include "../Include/TGA/tgaimage.h"
 #include "../Include/JustMath/Vector.h"
-#include "../Common/VertexShader.h"
-#include "../Common/FragmenShader.h"
+#include "VertexShader.h"
+#include "FragmenShader.h"
 
 
 struct Model {

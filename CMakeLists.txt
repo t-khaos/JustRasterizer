@@ -18,7 +18,7 @@ add_executable(
         Include/JustMath/Matrix.h
         Include/JustMath/Transform.h
 
-        Object/Model.h
+        Common/Model.h
 
         Renderer/Renderer.h
         Renderer/Camera.h
@@ -28,4 +28,4 @@ add_executable(
         Common/Vertex.h
 
         Include/TGA/tgaimage.h Include/TGA/tgaimage.cpp
-        Common/Loader.h Common/FragmenShader.h Shader/DefaultVertexShader.h Shader/DefaultFragmentShader.h Shader/DefaultVertexShader.cpp Shader/DefaultFragmentShader.cpp Common/Shader.h)
+        Common/Loader.h Common/FragmenShader.h Shader/DefaultVertexShader.h Shader/DefaultFragmentShader.h Shader/DefaultVertexShader.cpp Shader/DefaultFragmentShader.cpp Common/Shader.h Renderer/Renderer.cpp)

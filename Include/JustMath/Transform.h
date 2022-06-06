@@ -95,7 +95,7 @@ namespace Transform{
         return rotation * translation;
     }
 
-    inline Point2i Viewport(const Vertex &vertex, int width, int height) {
-        return Point2i(int((vertex.position.x + 1.0f) * width / 2.0f + 0.5f), int((vertex.position.y + 1.0f) * height / 2.0f + 0.5f));
+    inline Point2i Viewport(const Point3f &position, int width, int height) {
+        return Point2i(int((position.x + 1.0f) * width / 2.0f + 0.5f), int((position.y + 1.0f) * height / 2.0f + 0.5f));
     }
 }

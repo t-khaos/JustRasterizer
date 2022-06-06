@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include "../Object/Model.h"
+#include "Model.h"
 
 namespace Loader {
 

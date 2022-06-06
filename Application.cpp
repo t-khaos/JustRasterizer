@@ -1,6 +1,6 @@
 
 #include "Renderer/Film.h"
-#include "Object/Model.h"
+#include "Common/Model.h"
 #include "Renderer/Scene.h"
 #include "Common/Loader.h"
 #include "Renderer/Renderer.h"
