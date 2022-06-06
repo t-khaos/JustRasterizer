@@ -6,8 +6,7 @@
 #include <sstream>
 #include "../Include/TGA/tgaimage.h"
 #include "../Include/JustMath/Vector.h"
-#include "VertexShader.h"
-#include "FragmenShader.h"
+#include "Shader.h"
 
 
 struct Model {
@@ -16,6 +15,5 @@ struct Model {
     std::vector<Vector2f> uvs;
     std::vector<Vector3f> normals;
 
-    std::shared_ptr<VertexShader> vShader;
-    std::shared_ptr<FragmentShader> fShader;
+    std::shared_ptr<Shader> shader;
 };

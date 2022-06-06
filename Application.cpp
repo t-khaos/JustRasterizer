@@ -29,14 +29,12 @@ int main() {
     //模型
     auto model = Loader::LoadModel("../Resource/Model/african_head.obj");
     //着色器
-    auto vShader = std::make_shared<DefaultVertexShader>();
-    auto fShader = std::make_shared<DefaultFragmentShader>();
+    auto shader = std::make_shared<DefaultShader>();
     //纹理
     auto diffuseMap = Loader::LoadTexture("../Resource/Texture/african_head_diffuse.tga", film->width, film->height, TGAImage::RGB);
 
-    fShader->diffuseMap = diffuseMap;
-    model->vShader = vShader;
-    model->fShader = fShader;
+    shader->diffuseMap = diffuseMap;
+    model->shader = shader;
     scene->AddModel(model);
 
     //渲染器

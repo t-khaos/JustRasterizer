@@ -38,18 +38,18 @@ void Renderer::Render() const {
                 vertex.w = 1; //透视校正插值，保留w作为顶点深度值
 
                 //设置MVP变换矩阵
-                model->vShader->MVP = P * V * M;
+                model->shader->MVP = P * V * M;
                 //设置法线变换矩阵：模型变换矩阵的伴随矩阵的转置
-                model->vShader->N = Adjoint(M).Transpose();
+                model->shader->N = Adjoint(M).Transpose();
                 //设置光照
-                model->fShader->lightDir = Vector3f(0, 0, 1);
+                model->shader->lightDir = Vector3f(0, 0, 1);
                 //设置摄像机位置
-                model->vShader->cameraPos = camera->origin;
+                model->shader->cameraPos = camera->origin;
 
 
                 //顶点着色
                 //-----------------------------------------------
-                model->vShader->VertexShading(vertex);
+                model->shader->VertexShading(vertex);
             }
 
             //齐次裁剪
@@ -124,13 +124,13 @@ void Renderer::Render() const {
                                      + triangle[2].uv * gamma;
 
 
-                        model->fShader->normal = normal;
+                        model->shader->normal = normal;
                         //此处应该换成纹理的尺寸
-                        model->fShader->uv = Point2i(uv.x * film->width, uv.y * film->height);
+                        model->shader->uv = Point2i(uv.x * film->width, uv.y * film->height);
 
                         //像素着色
                         //-----------------------------------------------
-                        TGAColor color = model->fShader->FragmentShading();
+                        TGAColor color = model->shader->FragmentShading();
 
                         //融合
                         //-----------------------------------------------
