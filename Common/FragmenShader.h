@@ -1,9 +1,12 @@
 #pragma once
 
-#include "../Include/JustMath/Vector.h"
 #include "../Include/TGA/tgaimage.h"
+#include "../Include/JustMath/Vector.h"
+#include "Shader.h"
+#include "Vertex.h"
 
-struct FragmentShader {
+
+struct FragmentShader : Shader {
     Vector3f normal;
     Point2i uv;
     Vector3f lightDir;
@@ -11,5 +14,5 @@ struct FragmentShader {
     std::shared_ptr<TGAColor> normalMap;
     std::shared_ptr<TGAColor> specularMap;
 
-    virtual TGAColor FragmentShading() = 0;
+    virtual TGAColor FragmentShading(Vertex &vertex) = 0;
 };

@@ -3,9 +3,10 @@
 #include "../Include/JustMath/Vector.h"
 #include "../Include/JustMath/Matrix.h"
 #include "Vertex.h"
+#include "Shader.h"
 
-struct VertexShader {
+struct VertexShader : Shader {
     Matrix4f MVP;
 
-    virtual Vertex VertexShading(Vertex &vertex) = 0;
+    virtual void VertexShading(Vertex &vertex) = 0;
 };

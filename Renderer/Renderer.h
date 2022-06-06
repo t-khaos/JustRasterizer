@@ -24,7 +24,6 @@ struct Renderer {
 
 void Renderer::Render() const {
 
-    //此处应改为应用阶段设置
     Matrix4f M = Transform::Translate({0.0f, 0.0f, -3.0f})
                  * Transform::Scale({1.0f, 1.0f, 1.0f})
                  * Transform::Rotate({0.0f, 0.0f, 0.0f});
@@ -35,6 +34,9 @@ void Renderer::Render() const {
 
     Matrix4f P = Transform::Perspective(camera->aspectRatio, camera->fov, 0.5f, 50.0f);
 
+    //渲染流水线
+    //------------------------------------------------------------------------------------------------------------------------------------
+
     //遍历场景所有模型
     for (auto &model: scene->models) {
         //遍历模型所有三角面
@@ -44,91 +46,109 @@ void Renderer::Render() const {
             Vector<3, Vertex> triangle;
             Vector<3, Vector<2, int>> fragment;
 
-            //几何阶段
-            //-------------------------------------------------------------------------
-            //逐顶点应用顶点着色器
+
             for (int i = 0; i < 3; i++) {
 
+                //应用阶段
+                //---------------------------------------------------------------------------------------
+                //设置顶点数据
                 auto &vertex = triangle[i];
-
-                vertex.position = model->positions[face[i].x].Get4D();
+                vertex.position = model->positions[face[i].x];
                 vertex.uv = model->uvs[face[i].y];
-                vertex.normal = model->normals[face[i].z].Get4D();
-                vertex.w = 1;
+                vertex.normal = model->normals[face[i].z];
+                //透视校正插值，保留w1作为顶点深度值
+                vertex.w1 = 1;
+                vertex.w2 = 1;
 
+                //设置变换矩阵
                 model->vShader->MVP = P * V * M;
+                //设置光照
+                model->fShader->lightDir = Vector3f (0,0,1);
+
+                //几何阶段
+                //---------------------------------------------------------------------------------------
+                //逐顶点应用顶点着色器
+
+                //顶点着色
+                //-----------------------------------------------
                 model->vShader->VertexShading(vertex);
 
                 //齐次裁剪
+                //-----------------------------------------------
 
-                //透视校正插值，保留w作为深度值
-                vertex.w = vertex.position.w;
+
                 //透视除法
-                vertex.position /= vertex.position.w;
-                vertex.normal /= vertex.normal.w;
+                //-----------------------------------------------
+                //为保证流水线的直观，故在这里做透视除法
+                vertex.position /= vertex.w1;
+                vertex.normal /= vertex.w2;
 
+                //屏幕映射
+                //-----------------------------------------------
+                fragment[i] = Transform::Viewport(triangle[i], film->width, film->height);
             }
 
             //光栅化阶段
-            //-------------------------------------------------------------------------
-            //视口变换
-            for (int i = 0; i < 3; i++)
-                fragment[i] = Transform::Viewport(triangle[i], film->width, film->height);
-            //逐三角形应用片元着色器
-            Rasterize(triangle, fragment, model->fShader);
+            //---------------------------------------------------------------------------------------
+            //三角形设置
+            //-----------------------------------------------
+            Point2i minVector = MinVector(fragment[0], MinVector(fragment[1], fragment[2]));
+            minVector = MaxVector(Point2i(0), minVector);
+            Point2i maxVector = MaxVector(fragment[0], MaxVector(fragment[1], fragment[2]));
+            maxVector = MinVector(Point2i(film->width - 1, film->height - 1), maxVector);
+
+            //三角形遍历
+            //-----------------------------------------------
+            Point2i point;
+            for (point.x = minVector.x; point.x < maxVector.x; point.x++) {
+                for (point.y = minVector.y; point.y < maxVector.y; point.y++) {
+                    auto [beta, gamma] = Math::Barycentric(fragment, point);
+
+                    //beta,gamma可能算出0/0得NaN的情况
+                    if (beta >= 0.0f && gamma >= 0.0f && (beta + gamma) <= 1.0f) {
+                        float alpha = 1 - beta - gamma;
+
+                        //法线插值
+                        Vector3f normal = triangle[0].normal * alpha
+                                          + triangle[1].normal * beta
+                                          + triangle[2].normal * gamma;
+
+                        //uv插值
+                        Point2f uv = triangle[0].uv * alpha
+                                     + triangle[1].uv * beta
+                                     + triangle[2].uv * gamma;
+
+                        Vertex vertex;
+                        vertex.normal = normal;
+                        vertex.uv = uv;
+                        model->fShader->normal = normal;
+                        //此处应该换成纹理的尺寸
+                        model->fShader->uv = Point2i(uv.x * film->width, uv.y * film->height);
+
+                        //像素着色
+                        //-----------------------------------------------
+                        TGAColor color = model->fShader->FragmentShading(vertex);
+
+                        //透视校正插值
+                        float wValue = alpha / triangle[0].w1 + beta / triangle[1].w1 + gamma / triangle[2].w1;
+                        wValue = 1.0f / wValue;
+                        float zValue = triangle[0].position.z * alpha + triangle[1].position.z * beta + triangle[2].position.z * gamma;
+                        zValue *= wValue;
+
+                        //写入Z-Buffer
+                        int index = point.y * film->width + point.x;
+                        if (film->zBuffer[index] > zValue) {
+                            film->zBuffer[index] = zValue;
+                            //绘制像素
+                            film->image.set(point.x, point.y, color);
+                        }
+                    }
+                }
+            }
+            //融合
+            //-----------------------------------------------
         }
     }
 
     film->Develop("output.tga");
-}
-
-void Renderer::Rasterize(const Vector<3, Vertex> &triangle, const Vector<3, Vector<2, int>> &fragment, std::shared_ptr<FragmentShader> fShader) const {
-
-    //包围盒最小坐标
-    Point2i minVector = MinVector(fragment[0], MinVector(fragment[1], fragment[2]));
-    minVector = MaxVector(Point2i(0), minVector);
-    //包围盒最大坐标
-    Point2i maxVector = MaxVector(fragment[0], MaxVector(fragment[1], fragment[2]));
-    maxVector = MinVector(Point2i(film->width - 1, film->height - 1), maxVector);
-
-    Point2i P;
-    for (P.x = minVector.x; P.x < maxVector.x; P.x++) {
-        for (P.y = minVector.y; P.y < maxVector.y; P.y++) {
-            auto [beta, gamma] = Math::Barycentric(fragment, P);
-
-            //beta,gamma可能算出0/0得NaN的情况
-            if (beta >= 0.0f && gamma >= 0.0f && (beta + gamma) <= 1.0f) {
-                float alpha = 1 - beta - gamma;
-
-                //法线插值
-                Vector3f normal = triangle[0].normal.Get3D() * alpha
-                                  + triangle[1].normal.Get3D() * beta
-                                  + triangle[2].normal.Get3D() * gamma;
-
-                //UV插值
-                Point2f uv = triangle[0].uv * alpha
-                             + triangle[1].uv * beta
-                             + triangle[2].uv * gamma;
-
-                fShader->normal = normal;
-                //此处应该换成纹理的尺寸
-                fShader->uv = Point2i(uv.x * film->width, uv.y * film->height);
-
-                TGAColor color = fShader->FragmentShading();
-
-                ///透视校正插值
-                float wValue = alpha / triangle[0].w + beta / triangle[1].w + gamma / triangle[2].w;
-                wValue = 1.0f / wValue;
-                float zValue = triangle[0].position.z * alpha + triangle[1].position.z * beta + triangle[2].position.z * gamma;
-                zValue *= wValue;
-
-                int index = P.y * film->width + P.x;
-
-                if (film->zBuffer[index] > zValue) {
-                    film->zBuffer[index] = zValue;
-                    film->image.set(P.x, P.y, color);
-                }
-            }
-        }
-    }
 }

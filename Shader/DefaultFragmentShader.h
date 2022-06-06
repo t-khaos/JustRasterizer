@@ -4,9 +4,7 @@
 
 struct DefaultFragmentShader : FragmentShader {
 
-    DefaultFragmentShader() {
-        lightDir = Vector3f(0, 0, 1);
-    }
+    DefaultFragmentShader() {}
 
-    virtual TGAColor FragmentShading() override;
+    virtual TGAColor FragmentShading(Vertex &vertex) override;
 };

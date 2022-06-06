@@ -7,6 +7,5 @@ struct DefaultVertexShader : VertexShader {
 
     DefaultVertexShader() {}
 
-    virtual Vertex VertexShading(Vertex &vertex) override;
-
+    virtual void VertexShading(Vertex &vertex) override;
 };
