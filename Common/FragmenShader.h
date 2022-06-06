@@ -16,3 +16,10 @@ struct FragmentShader : Shader {
 
     virtual TGAColor FragmentShading() = 0;
 };
+
+struct DefaultFragmentShader : FragmentShader {
+
+    DefaultFragmentShader() {}
+
+    virtual TGAColor FragmentShading() override;
+};

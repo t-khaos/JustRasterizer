@@ -1,5 +1,5 @@
 
-#include "DefaultFragmentShader.h"
+#include "../Common/FragmenShader.h"
 
 TGAColor DefaultFragmentShader::FragmentShading(){
     float NdotL = Dot(normal, lightDir);

@@ -4,12 +4,15 @@
 
 void Renderer::Render() const {
 
+    float near = 0.5f;
+    float far = 50.f;
+
     Matrix4f M = Transform::Translate({0.0f, 0.0f, -3.0f})
                  * Transform::Scale({1.0f, 1.0f, 1.0f})
                  * Transform::Rotate({0.0f, 0.0f, 0.0f});
 
     Matrix4f V = Transform::Translate({0.0f, 0.0f, 0.0f})
-                 * Transform::Rotate({0.0f, 0.0f, 0.0f})
+                 * Transform::Rotate({0.0f, 30.0f, 0.0f})
                  * Transform::LookAt(camera->origin, camera->target, camera->up);
 
     Matrix4f P = Transform::Perspective(camera->aspectRatio, camera->fov, 0.5f, 50.0f);
@@ -45,6 +48,8 @@ void Renderer::Render() const {
                 model->vShader->N = Adjoint(M).Transpose();
                 //设置光照
                 model->fShader->lightDir = Vector3f(0, 0, 1);
+                //设置摄像机位置
+                model->vShader->cameraPos = camera->origin;
 
                 //几何阶段
                 //---------------------------------------------------------------------------------------
@@ -54,15 +59,22 @@ void Renderer::Render() const {
                 //-----------------------------------------------
                 model->vShader->VertexShading(vertex);
 
+
                 //齐次裁剪
                 //-----------------------------------------------
+                //背面剔除 Face Culling
+                Vector3f viewDir = camera->origin-camera->target;
+                if(Dot(viewDir,vertex.normal)<0)
+                    isClipped = true;
+
+                //视口剔除 CVV Culling
                 //TODO: 在CVV上的三角形，顶点应重新规划。
                 //简单剔除超出CVV的三角形
                 float w = vertex.w;
                 if (vertex.position.x > w || vertex.position.x < -w
                     || vertex.position.y > w || vertex.position.y < -w
                     || vertex.position.z > w || vertex.position.z < 0.0f
-                    || w == 0) {
+                    || w < near) {
                     isClipped = true;
                 }
 
@@ -77,7 +89,7 @@ void Renderer::Render() const {
             }
 
             //简单剔除超出CVV的三角形
-            if(isClipped)
+            if (isClipped)
                 continue;
 
             //光栅化阶段

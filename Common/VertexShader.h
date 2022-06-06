@@ -12,3 +12,10 @@ struct VertexShader : Shader {
 
     virtual void VertexShading(Vertex &vertex) = 0;
 };
+
+struct DefaultVertexShader : VertexShader {
+
+    DefaultVertexShader() {}
+
+    virtual void VertexShading(Vertex &vertex) override;
+};

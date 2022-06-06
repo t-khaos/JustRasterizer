@@ -4,8 +4,6 @@
 #include "Renderer/Scene.h"
 #include "Common/Loader.h"
 #include "Renderer/Renderer.h"
-#include "Shader/DefaultVertexShader.h"
-#include "Shader/DefaultFragmentShader.h"
 
 int main() {
     const int width = 1024;

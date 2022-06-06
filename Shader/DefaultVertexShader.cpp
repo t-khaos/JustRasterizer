@@ -1,5 +1,5 @@
 
-#include "DefaultVertexShader.h"
+#include "../Common/VertexShader.h"
 
 void DefaultVertexShader::VertexShading(Vertex &vertex) {
     //MVP变换
