@@ -55,12 +55,13 @@ void Renderer::Render() const {
             //齐次裁剪
             //-----------------------------------------------
             //背面剔除 Face Culling
-            Vector3f viewDir = camera->origin - camera->target;
+            Vector3f viewDir(0, 0, 1); //NDC空间下观察方向为(0,0,1)
             auto &A = triangle[0].position;
             auto &B = triangle[1].position;
             auto &C = triangle[2].position;
-
-            auto faceNormal = Cross(A - B, A - C); //模型三角面地顶点应遵循逆时针方向
+            //模型三角面地顶点应遵循逆时针方向
+            //在NDC空间的左手坐标系下，叉乘出的法向量与观察方向不同向则为背面
+            auto faceNormal = Cross(B - A, C - A);
             if (Dot(viewDir, faceNormal) < 0)
                 continue;
 
