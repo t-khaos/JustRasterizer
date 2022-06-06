@@ -42,7 +42,7 @@ void Renderer::Render() const {
                 //设置MVP变换矩阵
                 model->vShader->MVP = P * V * M;
                 //设置法线变换矩阵：模型变换矩阵的伴随矩阵的转置
-                model->vShader->N = Invert(M).Transpose();
+                model->vShader->N = Adjoint(M).Transpose();
                 //设置光照
                 model->fShader->lightDir = Vector3f(0, 0, 1);
 
