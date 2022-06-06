@@ -4,9 +4,6 @@
 
 void Renderer::Render() const {
 
-    float near = 0.5f;
-    float far = 50.f;
-
     Matrix4f M = Transform::Translate({0.0f, 0.0f, -3.0f})
                  * Transform::Scale({1.0f, 1.0f, 1.0f})
                  * Transform::Rotate({0.0f, 0.0f, 0.0f});
@@ -15,7 +12,7 @@ void Renderer::Render() const {
                  * Transform::Rotate({0.0f, 0.0f, 0.0f})
                  * Transform::LookAt(camera->origin, camera->target, camera->up);
 
-    Matrix4f P = Transform::Perspective(camera->aspectRatio, camera->fov, 0.5f, 50.0f);
+    Matrix4f P = Transform::Perspective(camera->aspectRatio, camera->fov, camera->near, camera->far);
 
     //渲染流水线
     //------------------------------------------------------------------------------------------------------------------------------------
@@ -33,13 +30,12 @@ void Renderer::Render() const {
 
             //遍历所有顶点
             for (int i = 0; i < 3; i++) {
-                //设置顶点数据
                 auto &vertex = triangle[i];
                 vertex.position = model->positions[face[i].x];
                 vertex.uv = model->uvs[face[i].y];
                 vertex.normal = model->normals[face[i].z];
-                //透视校正插值，保留w作为顶点深度值
-                vertex.w = 1;
+
+                vertex.w = 1; //透视校正插值，保留w作为顶点深度值
 
                 //设置MVP变换矩阵
                 model->vShader->MVP = P * V * M;
@@ -60,10 +56,11 @@ void Renderer::Render() const {
             //-----------------------------------------------
             //背面剔除 Face Culling
             Vector3f viewDir = camera->origin - camera->target;
-            auto &A = triangle[0];
-            auto &B = triangle[1];
-            auto &C = triangle[2];
-            auto faceNormal = Cross(A.position - B.position, A.position - C.position);
+            auto &A = triangle[0].position;
+            auto &B = triangle[1].position;
+            auto &C = triangle[2].position;
+
+            auto faceNormal = Cross(A - B, A - C); //模型三角面地顶点应遵循逆时针方向
             if (Dot(viewDir, faceNormal) < 0)
                 continue;
 

@@ -10,14 +10,15 @@ int main() {
     const int height = 1024;
     const float aspectRatio = static_cast<float>(width) / height;
     const float fov = 45;
+    const float near = 0.5f, far = 50.0f;
     Vector3f origin(0.0f, 0.0f, 0.0f);
     Vector3f target(0.0f, 0.0f, -1.0f);
     Vector3f up(0.0f, 1.0f, 0.0f);
 
     //相机
     //-------------------------------------------
-    auto camera = std::make_shared<Camera>(origin, target, up, fov, aspectRatio);
-
+    auto camera = std::make_shared<Camera>(origin, target, up);
+    camera->SetViewSpace(near, far, fov, aspectRatio);
     //胶卷
     //-------------------------------------------
     auto film = std::make_shared<Film>(width, height);
