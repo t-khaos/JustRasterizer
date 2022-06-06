@@ -12,7 +12,7 @@ void Renderer::Render() const {
                  * Transform::Rotate({0.0f, 0.0f, 0.0f});
 
     Matrix4f V = Transform::Translate({0.0f, 0.0f, 0.0f})
-                 * Transform::Rotate({0.0f, 30.0f, 0.0f})
+                 * Transform::Rotate({0.0f, 0.0f, 0.0f})
                  * Transform::LookAt(camera->origin, camera->target, camera->up);
 
     Matrix4f P = Transform::Perspective(camera->aspectRatio, camera->fov, 0.5f, 50.0f);
@@ -30,8 +30,7 @@ void Renderer::Render() const {
             Vector<3, Vector<2, int>> fragment;
 
             bool isClipped = false;
-            //应用阶段
-            //---------------------------------------------------------------------------------------
+
             //遍历所有顶点
             for (int i = 0; i < 3; i++) {
                 //设置顶点数据
@@ -51,46 +50,50 @@ void Renderer::Render() const {
                 //设置摄像机位置
                 model->vShader->cameraPos = camera->origin;
 
-                //几何阶段
-                //---------------------------------------------------------------------------------------
-                //逐顶点应用顶点着色器
 
                 //顶点着色
                 //-----------------------------------------------
                 model->vShader->VertexShading(vertex);
+            }
+
+            //齐次裁剪
+            //-----------------------------------------------
+            //背面剔除 Face Culling
+            Vector3f viewDir = camera->origin - camera->target;
+            auto &A = triangle[0];
+            auto &B = triangle[1];
+            auto &C = triangle[2];
+            auto faceNormal = Cross(A.position - B.position, A.position - C.position);
+            if (Dot(viewDir, faceNormal) < 0)
+                continue;
 
 
-                //齐次裁剪
-                //-----------------------------------------------
-                //背面剔除 Face Culling
-                Vector3f viewDir = camera->origin-camera->target;
-                if(Dot(viewDir,vertex.normal)<0)
-                    isClipped = true;
-
+            for (int i = 0; i < 3; i++) {
                 //视口剔除 CVV Culling
                 //TODO: 在CVV上的三角形，顶点应重新规划。
                 //简单剔除超出CVV的三角形
-                float w = vertex.w;
+/*                float w = vertex.w;
                 if (vertex.position.x > w || vertex.position.x < -w
                     || vertex.position.y > w || vertex.position.y < -w
                     || vertex.position.z > w || vertex.position.z < 0.0f
                     || w < near) {
                     isClipped = true;
-                }
+                }*/
 
                 //透视除法
                 //-----------------------------------------------
                 //为保证流水线的直观，故在这里做透视除法
-                vertex.position /= vertex.w;
+                triangle[i].position /= triangle[i].w;
 
                 //屏幕映射
                 //-----------------------------------------------
-                fragment[i] = Transform::Viewport(vertex.position, film->width, film->height);
+                fragment[i] = Transform::Viewport(triangle[i].position, film->width, film->height);
             }
 
             //简单剔除超出CVV的三角形
             if (isClipped)
                 continue;
+
 
             //光栅化阶段
             //---------------------------------------------------------------------------------------
