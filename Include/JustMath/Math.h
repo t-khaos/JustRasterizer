@@ -2,7 +2,6 @@
 
 #include <cmath>
 #include <algorithm>
-#include "../../../JustTracer/Math/Global.h"
 #include "Global.h"
 
 namespace Math{
