@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(JustRenderer)
+project(JustRasterizer)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -7,10 +7,12 @@ add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 
 
 add_executable(
-        JustRenderer
+        JustRasterizer
         Application.cpp
 
-        Renderer/Film.h Renderer/Film.cpp
+        Model/Model.h
+        Model/Vertex.h
+        Model/Texture.h
 
         Include/JustMath/Vector.h
         Include/JustMath/Math.h
@@ -18,13 +20,16 @@ add_executable(
         Include/JustMath/Matrix.h
         Include/JustMath/Transform.h
 
-        Common/Model.h
 
-        Renderer/Renderer.h
+
+        Renderer/Renderer.h Renderer/Renderer.cpp
         Renderer/Camera.h
         Renderer/Scene.h
+        Renderer/Film.h Renderer/Film.cpp
 
-        Common/Vertex.h
 
         Include/TGA/tgaimage.h Include/TGA/tgaimage.cpp
-        Common/Loader.h Shader/DefaultShader.cpp Common/Shader.h Renderer/Renderer.cpp)
+
+        Shader/Shader.h
+        Shader/DefaultShader.cpp
+        Model/ConvKernel.h)

@@ -3,7 +3,8 @@
 #include "../Include/JustMath/Vector.h"
 #include "../Include/TGA/tgaimage.h"
 #include "../Include/JustMath/Matrix.h"
-#include "Vertex.h"
+#include "../Model/Vertex.h"
+#include "../Model/Texture.h"
 
 struct Shader{
     //common
@@ -22,11 +23,11 @@ struct Shader{
     //fragment shader
     //------------------------------------------------------
     Vector3f normal;
-    Point2i uv;
+    Point2f uv;
     Vector3f lightDir;
-    std::shared_ptr<TGAImage> diffuseMap;
-    std::shared_ptr<TGAColor> normalMap;
-    std::shared_ptr<TGAColor> specularMap;
+    std::shared_ptr<Texture> diffuseMap;
+    std::shared_ptr<Texture> normalMap;
+    std::shared_ptr<Texture> specularMap;
 
     virtual TGAColor FragmentShading() = 0;
 };

@@ -1,6 +1,6 @@
 
 <h1 align="center">Just Rasterizer</h1>
-<p align="center"><img src="Resource/Output/output.jpg" alt="Logo" WIDTH="50%"></p>
+<p align="center"><img src="Output/output.jpg" alt="Logo" WIDTH="50%"></p>
 <p align="center">软光栅化渲染器</p>
 
 ## About

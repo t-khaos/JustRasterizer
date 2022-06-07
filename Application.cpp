@@ -1,9 +1,9 @@
 
 #include "Renderer/Film.h"
-#include "Common/Model.h"
 #include "Renderer/Scene.h"
-#include "Common/Loader.h"
 #include "Renderer/Renderer.h"
+#include "Model/Model.h"
+#include "Model/Texture.h"
 
 int main() {
     const int width = 1024;
@@ -27,11 +27,12 @@ int main() {
     //-------------------------------------------
     auto scene = std::make_shared<Scene>();
     //模型
-    auto model = Loader::LoadModel("../Resource/Model/african_head.obj");
+    auto model = std::make_shared<Model>("../Resource/Model/african_head.obj");
     //着色器
     auto shader = std::make_shared<DefaultShader>();
     //纹理
-    auto diffuseMap = Loader::LoadTexture("../Resource/Texture/african_head_diffuse.tga", film->width, film->height, TGAImage::RGB);
+    auto diffuseMap = std::make_shared<Texture>("../Resource/Texture/african_head_diffuse.tga", 1024, TGAImage::RGB, 3);
+
 
     shader->diffuseMap = diffuseMap;
     model->shader = shader;

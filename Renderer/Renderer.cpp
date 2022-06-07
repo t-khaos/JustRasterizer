@@ -1,6 +1,5 @@
 
 #include "Renderer.h"
-#include "../Common/Vertex.h"
 
 void Renderer::Render() const {
 
@@ -25,8 +24,6 @@ void Renderer::Render() const {
 
             Vector<3, Vertex> triangle;
             Vector<3, Vector<2, int>> fragment;
-
-            bool isClipped = false;
 
             //遍历所有顶点
             for (int i = 0; i < 3; i++) {
@@ -65,9 +62,8 @@ void Renderer::Render() const {
             if (Dot(viewDir, faceNormal) < 0)
                 continue;
 
-
+            //视口剔除 CVV Culling
             for (int i = 0; i < 3; i++) {
-                //视口剔除 CVV Culling
                 //TODO: 在CVV上的三角形，顶点应重新规划。
                 //简单剔除超出CVV的三角形
 /*                float w = vertex.w;
@@ -75,7 +71,7 @@ void Renderer::Render() const {
                     || vertex.position.y > w || vertex.position.y < -w
                     || vertex.position.z > w || vertex.position.z < 0.0f
                     || w < near) {
-                    isClipped = true;
+
                 }*/
 
                 //透视除法
@@ -87,11 +83,6 @@ void Renderer::Render() const {
                 //-----------------------------------------------
                 fragment[i] = Transform::Viewport(triangle[i].position, film->width, film->height);
             }
-
-            //简单剔除超出CVV的三角形
-            if (isClipped)
-                continue;
-
 
             //光栅化阶段
             //---------------------------------------------------------------------------------------
@@ -126,7 +117,7 @@ void Renderer::Render() const {
 
                         model->shader->normal = normal;
                         //此处应该换成纹理的尺寸
-                        model->shader->uv = Point2i(uv.x * film->width, uv.y * film->height);
+                        model->shader->uv = uv;
 
                         //像素着色
                         //-----------------------------------------------
