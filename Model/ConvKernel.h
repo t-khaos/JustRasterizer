@@ -34,9 +34,13 @@ struct ConvKernel {
         return matrix.size();
     }
 
-    std::tuple<int, int> Next() {
-        int x = index / height;
-        int y = index % width;
+    void Init(){
+        index=0;
+    }
+
+    Int2 Next() {
+        int y = index / height;
+        int x = index % width;
         if (++index >= matrix.size())
             index = 0;
         return {x, y};

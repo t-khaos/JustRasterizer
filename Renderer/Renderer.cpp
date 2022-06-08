@@ -23,7 +23,7 @@ void Renderer::Render() const {
             auto &face = model->faces[j];
 
             Vector<3, Vertex> triangle;
-            Vector<3, Vector<2, int>> fragment;
+            Vector<3, Vector<2, float>> fragment;
 
             //遍历所有顶点
             for (int i = 0; i < 3; i++) {
@@ -88,57 +88,128 @@ void Renderer::Render() const {
             //---------------------------------------------------------------------------------------
             //三角形设置
             //-----------------------------------------------
-            Point2i minVector = MinVector(fragment[0], MinVector(fragment[1], fragment[2]));
-            minVector = MaxVector(Point2i(0), minVector);
-            Point2i maxVector = MaxVector(fragment[0], MaxVector(fragment[1], fragment[2]));
-            maxVector = MinVector(Point2i(film->width - 1, film->height - 1), maxVector);
+            Point2f minVector = MinVector(fragment[0], MinVector(fragment[1], fragment[2]));
+            minVector = MaxVector(Point2f(0.0f), minVector);
+            Point2f maxVector = MaxVector(fragment[0], MaxVector(fragment[1], fragment[2]));
+            maxVector = MinVector(Point2f(film->width, film->height), maxVector);
 
+
+#define MSAA
             //三角形遍历
             //-----------------------------------------------
-            Point2i point;
-            for (point.x = minVector.x; point.x < maxVector.x; point.x++) {
-                for (point.y = minVector.y; point.y < maxVector.y; point.y++) {
-                    auto [beta, gamma] = Math::Barycentric(fragment, point);
+            Point2f point;
+            //最大值向上取整，最小值向下取整且从中心点开始
+            for (point.x = std::floor(minVector.x) + 0.5f; point.x < std::ceil(maxVector.x); point.x++) {
+                for (point.y = std::floor(minVector.y) + 0.5f; point.y < std::ceil(maxVector.y); point.y++) {
+                    Float3f ratios;
+#ifdef MSAA
+                    //MSAA
+                    std::vector<float> matrix = {
+                            1, 1,
+                            1, 1
+                    };
+                    ConvKernel kernel(matrix);
 
-                    //beta,gamma可能算出0/0得NaN的情况
-                    if (beta >= 0.0f && gamma >= 0.0f && (beta + gamma) <= 1.0f) {
-                        float alpha = 1 - beta - gamma;
+                    Point2f subPoint;
+                    for (auto &k: kernel.matrix) {
+                        auto offset = kernel.Next();
 
-                        //法线插值
-                        Vector3f normal = triangle[0].normal * alpha
-                                          + triangle[1].normal * beta
-                                          + triangle[2].normal * gamma;
+                        offset.x = offset.x ? 1 : -1;
+                        offset.y = offset.y ? 1 : -1;
 
-                        //uv插值
-                        Point2f uv = triangle[0].uv * alpha
-                                     + triangle[1].uv * beta
-                                     + triangle[2].uv * gamma;
-
-
-                        model->shader->normal = normal;
-                        //此处应该换成纹理的尺寸
-                        model->shader->uv = uv;
-
-                        //像素着色
-                        //-----------------------------------------------
-                        TGAColor color = model->shader->FragmentShading();
-
-                        //融合
-                        //-----------------------------------------------
-
-                        //深度测试
-                        // 1/w与屏幕空间为线性关系，故可以用中心坐标进行插值
-                        float wValue = alpha / triangle[0].w + beta / triangle[1].w + gamma / triangle[2].w;
-                        wValue = 1.0f / wValue;
-                        float zValue = triangle[0].position.z * alpha + triangle[1].position.z * beta + triangle[2].position.z * gamma;
-                        zValue *= wValue;
-                        int index = point.y * film->width + point.x;
-                        if (film->zBuffer[index] > zValue) {
-                            film->zBuffer[index] = zValue;
-                            //绘制像素
-                            film->image.set(point.x, point.y, color);
+                        subPoint = Point2f(point.x + offset.x * 0.25f, point.y + offset.y * 0.25f);
+                        if (!Math::GetBarycentric(fragment, subPoint, ratios)) {
+                            //未经过子像素，有效数量-1，k标记为0
+                            kernel.valid--;
+                            k = 0;
                         }
                     }
+
+                    //子像素也没有经过则不算在三角形内
+                    if (!kernel.valid)
+                        continue;
+
+                    //若有子像素经过，仍然需要以中心点计算重心坐标
+                    Math::GetBarycentric(fragment, point, ratios);
+#endif
+
+#ifndef MSAA
+                    //没有开启MSAA直接检查中心点是否在三角形内
+                    if (!Math::GetBarycentric(fragment, point, ratios))
+                        continue;
+#endif
+
+                    //法线插值
+                    Vector3f normal = triangle[0].normal * ratios.x
+                                      + triangle[1].normal * ratios.y
+                                      + triangle[2].normal * ratios.z;
+
+                    //uv插值
+                    Point2f uv = triangle[0].uv * ratios.x
+                                 + triangle[1].uv * ratios.y
+                                 + triangle[2].uv * ratios.z;
+
+
+                    model->shader->normal = normal;
+                    //此处应该换成纹理的尺寸
+                    model->shader->uv = uv;
+
+                    //像素着色
+                    //-----------------------------------------------
+                    TGAColor pixel = model->shader->FragmentShading();
+
+                    //融合
+                    //-----------------------------------------------
+
+                    //深度测试
+                    // 1/w与屏幕空间为线性关系，故可以用中心坐标进行插值
+                    float wValue = ratios.x / triangle[0].w + ratios.y / triangle[1].w + ratios.z / triangle[2].w;
+                    wValue = 1.0f / wValue;
+                    float depth = triangle[0].position.z * ratios.x + triangle[1].position.z * ratios.y + triangle[2].position.z * ratios.z;
+                    depth *= wValue;
+#ifdef MSAA
+                    Color3i color;
+                    kernel.Init();
+                    bool update = false;
+                    int count = 0;
+                    //遍历四个子像素
+                    for (auto &k: kernel.matrix) {
+                        auto offset = kernel.Next();
+                        float x = point.x * 2 + offset.x;
+                        float y = point.y * 2 + offset.y;
+
+                        int index = y * film->width + x;
+
+                        if (k && film->depthBufferMSAA2x2[index] > depth) {
+                            film->depthBufferMSAA2x2[index] = depth;
+                            film->frameBufferMSAA2x2[index] = pixel;
+                            //子像素贡献颜色
+                            color += Color3i(pixel.r, pixel.g, pixel.b);
+                            update = true;
+                            count++;
+                        }
+                        else{
+                            TGAColor subPixel = film->frameBufferMSAA2x2[index];
+                            color += Color3i(subPixel.r, subPixel.g, subPixel.b);
+                        }
+                    }
+                    //子像素发生变动才需要更新
+                    if(update){
+                        //平均各个子像素的颜色
+                        color /= kernel.Size();
+                        pixel = TGAColor(color.r, color.g, color.b);
+                        film->image.set(point.x, point.y, pixel);
+                    }
+#endif
+
+#ifndef MSAA
+                    int index = point.y * film->width + point.x;
+                    if (film->depthBuffer[index] > depth) {
+                        film->depthBuffer[index] = depth;
+                        film->frameBuffer[index] = pixel;
+                        film->image.set(point.x, point.y, pixel);
+                    }
+#endif
                 }
             }
         }

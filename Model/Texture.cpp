@@ -48,8 +48,8 @@ void Texture::GenMipmap(std::shared_ptr<TGAImage> &current, ConvKernel<float> &k
             Color3i color;
             TGAColor pixel;
             for (auto k: kernel.matrix) {
-                auto [x, y] = kernel.Next();
-                pixel = mipmap[level - 1]->get(i + x, j + y);
+                auto offset = kernel.Next();
+                pixel = mipmap[level - 1]->get(i + offset.x, j + offset.y);
                 color += Color3i(pixel.r * k, pixel.g * k, pixel.b * k);
             }
             color /= kernel.Size();
@@ -98,10 +98,10 @@ TGAColor Texture::GetColorBilinear(const Point2f &uv, int level = 0) {
     Color3f color;
     TGAColor pixel;
     for (auto &k: kernel.matrix) {
-        auto [offsetX, offsetY] = kernel.Next();
-        offsetX = offsetX ? 1 : -1;
-        offsetY = offsetY ? 1 : -1;
-        pixel = mipmap[level]->get(centerX + offsetX * 0.5f, centerY + offsetY * 0.5f);
+        auto offset = kernel.Next();
+        offset.x = offset.x ? 1 : -1;
+        offset.y = offset.y ? 1 : -1;
+        pixel = mipmap[level]->get(centerX + offset.x * 0.5f, centerY + offset.y * 0.5f);
         color += Color3f(pixel.r * k, pixel.g * k, pixel.b * k);
     }
     return TGAColor(color.r, color.g, color.b);

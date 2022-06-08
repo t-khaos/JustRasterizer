@@ -93,7 +93,7 @@ namespace Transform {
     }
 
     //视口变换矩阵
-    inline Point2i Viewport(const Point3f &position, int width, int height) {
+    inline Point2f Viewport(const Point3f &position, int width, int height) {
         Matrix4f viewport = {
                 {width / 2.0f, 0,             0, width / 2.0f},
                 {0,            height / 2.0f, 0, height / 2.0f},
@@ -103,8 +103,6 @@ namespace Transform {
 
         Point4f position4d = viewport * position.Get4D();
 
-        Point2f position2d = position4d.Get2D() + Point2f(0.5f);
-
-        return Point2i(int(position2d.x), int(position2d.y));
+        return position4d.Get2D();
     }
 }

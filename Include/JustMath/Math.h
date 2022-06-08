@@ -4,7 +4,7 @@
 #include <algorithm>
 #include "Global.h"
 
-namespace Math{
+namespace Math {
     inline int ToRGB(float x) {
         return int(std::pow(std::clamp(x, 0.0f, 1.0f), 1.0f / 2.2f) * 255 + 0.5f);
     }
@@ -13,21 +13,24 @@ namespace Math{
         return degrees * PI / 180.0;
     }
 
-    inline std::tuple<float, float> Barycentric(const Vector<3, Vector<2, int>> &triangle, const Point2i &P) {
+    template<typename T>
+    inline bool GetBarycentric(const Vector<3, Vector<2, T>> &triangle, const Vector<2, T> &P, Float3f &ratios) {
         auto &A = triangle[0];
         auto &B = triangle[1];
         auto &C = triangle[2];
 
-        float numerator = static_cast<float>((A.y - B.y) * P.x + (B.x - A.x) * P.y + A.x * B.y - B.x * A.y);
-        float denominator = static_cast<float>((A.y - B.y) * C.x + (B.x - A.x) * C.y + A.x * B.y - B.x * A.y);
-
-        float gamma = numerator / denominator;
+        float numerator, denominator;
 
         numerator = static_cast<float>((A.y - C.y) * P.x + (C.x - A.x) * P.y + A.x * C.y - C.x * A.y);
         denominator = static_cast<float>((A.y - C.y) * B.x + (C.x - A.x) * B.y + A.x * C.y - C.x * A.y);
+        ratios.y = numerator / denominator;
 
-        float beta = numerator / denominator;
+        numerator = static_cast<float>((A.y - B.y) * P.x + (B.x - A.x) * P.y + A.x * B.y - B.x * A.y);
+        denominator = static_cast<float>((A.y - B.y) * C.x + (B.x - A.x) * C.y + A.x * B.y - B.x * A.y);
+        ratios.z = numerator / denominator;
 
-        return {beta, gamma};
+        ratios.x = 1.0f -  ratios.y-ratios.z;
+
+        return ratios.y >= 0 && ratios.z >= 0 && ratios.z + ratios.y <= 1.0f + EPSILON ;
     }
 }

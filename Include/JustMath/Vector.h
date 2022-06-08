@@ -528,6 +528,8 @@ typedef Vector<4, float> Point4f;
 typedef Vector<3, float> Vector3f;
 typedef Vector<3, float> Point3f;
 typedef Vector<3, float> Color3f;
+typedef Vector<3, float> Float3f;
+
 typedef Vector<2, float> Vector2f;
 typedef Vector<2, float> Point2f;
 typedef Vector<2, float> Range2f;
@@ -536,6 +538,7 @@ typedef Vector<2, float> Float2f;
 typedef Vector<3, int> Vector3i;
 typedef Vector<3, int> Color3i;
 typedef Vector<2, int> Point2i;
+typedef Vector<2, int> Int2;
 
 typedef Vector<3, Vector<3, int>> Face3i;
 
