@@ -171,7 +171,6 @@ void Renderer::Render() const {
                     Color3i color;
                     kernel.Init();
                     bool update = false;
-                    int count = 0;
                     //遍历四个子像素
                     for (auto &k: kernel.matrix) {
                         auto offset = kernel.Next();
@@ -186,7 +185,6 @@ void Renderer::Render() const {
                             //子像素贡献颜色
                             color += Color3i(pixel.r, pixel.g, pixel.b);
                             update = true;
-                            count++;
                         }
                         else{
                             TGAColor subPixel = film->frameBufferMSAA2x2[index];
