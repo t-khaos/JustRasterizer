@@ -10,5 +10,5 @@ struct Scene {
 
     Scene():models({}){}
 
-    void AddModel(std::shared_ptr<Model> model) { models.push_back(model); }
+    void AddModel(const std::shared_ptr<Model> &model) { models.push_back(model); }
 };

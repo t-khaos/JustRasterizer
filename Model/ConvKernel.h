@@ -3,17 +3,20 @@
 #include <vector>
 #include <cassert>
 
+template<typename T>
 struct ConvKernel {
-    std::vector<float> matrix;
+    std::vector<T> matrix;
     int index;
+    int valid;
     union {
         int width;
         int height;
     };
 
-    ConvKernel(const std::vector<float> &_mat) : matrix(_mat) {
+    ConvKernel(const std::vector<T> &_mat) : matrix(_mat) {
         index = 0;
         width = sqrt(matrix.size());
+        valid = matrix.size();
         //卷积核尺寸必须长宽相等
         assert(width * height == matrix.size());
     }
@@ -22,6 +25,7 @@ struct ConvKernel {
         index = 0;
         matrix = _kernel.matrix;
         width = _kernel.width;
+        valid = matrix.size();
         //卷积核尺寸必须长宽相等
         assert(width * height == matrix.size());
     }
@@ -31,8 +35,8 @@ struct ConvKernel {
     }
 
     std::tuple<int, int> Next() {
-        int x = index % width;
-        int y = index / height;
+        int x = index / height;
+        int y = index % width;
         if (++index >= matrix.size())
             index = 0;
         return {x, y};

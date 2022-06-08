@@ -55,7 +55,7 @@ struct Texture {
         }
     }
 
-    void GenMipmap(std::shared_ptr<TGAImage> &current, ConvKernel &kernel, int level) {
+    void GenMipmap(std::shared_ptr<TGAImage> &current, ConvKernel<float> &kernel, int level) {
         for (int j = 0, t = 0; j < mipmap[level - 1]->get_height() && t < current->get_height(); j += 2, t++) {
             for (int i = 0, s = 0; i < mipmap[level - 1]->get_width() && s < current->get_width(); i += 2, s++) {
                 //取得平均值写入当前层级的mipmap
@@ -73,12 +73,68 @@ struct Texture {
         }
     }
 
-    TGAColor GetColorByUV(const Point2f &uv, int level = 0) {
+    TGAColor GetColor(const Point2f &uv, int level = 0) {
         //检查层级是否超过mipmap
-        assert(level<mipmap.size());
-        int w = width >> level;
-        int h = height >> level;
-        return mipmap[level]->get(uv.s * w, uv.t * h);
+        assert(level < mipmap.size());
+        //四舍五入
+        int x = uv.u * (width >> level) + 0.5f;
+        int y = uv.v * (height >> level) + 0.5f;
+        return mipmap[level]->get(x, y);
+    }
+
+    //双线性插值
+    TGAColor GetColorBilinear(const Point2f &uv, int level = 0) {
+        //  y ↑
+        //    +++++++++++++++++
+        //    |  u00  |  u01  |
+        //    |   ·   |   ·   |
+        //    |+++++++·+++++++|
+        //    |   ·   |   ·   |
+        //    |  u10  |  u11  |
+        //    +++++++++++++++++  → x
+
+
+        //检查层级是否超过mipmap
+        assert(level < mipmap.size());
+
+        auto &current = mipmap[level];
+
+        //纹理坐标
+        float x = uv.u * (width >> level);
+        float y = uv.v * (height >> level);
+
+        int centerX = (x - int(x)) > 0.5f ? std::ceil(x) : std::floor(x);
+        int centerY = (y - int(y)) > 0.5f ? std::ceil(y) : std::floor(y);
+
+        //左下像素纹理坐标
+        float s = x - (centerX - 0.5f);
+        float t = y - (centerY - 0.5f);
+
+        //按offset顺序重新排列
+        std::vector<float> matrix = {
+                (1 - s) * (1 - t), (1 - s) * t,
+                s * (1 - t), s * t
+        };
+        //正常插值顺序
+        //00: (1 - s) * t,          01: s * t,
+        //10: (1 - s) * (1 - t),    11: s * (1 - t)
+        float a =  (1 - s) * (1 - t)*100;
+        float b = (1 - s)* t*100;
+        float c = s * (1 - t)*100;
+        float d = s * t*100;
+        float num=a+b+c+d;
+
+        ConvKernel kernel(matrix);
+        Color3f color;
+        TGAColor pixel;
+        for (auto &k: kernel.matrix) {
+            auto [offsetX, offsetY] = kernel.Next();
+            offsetX = offsetX ? 1 : -1;
+            offsetY = offsetY ? 1 : -1;
+            pixel = current->get(centerX + offsetX * 0.5f, centerY + offsetY * 0.5f);
+            color += Color3f(pixel.r * k, pixel.g * k, pixel.b * k);
+        }
+        return TGAColor(color.r, color.g, color.b);
     }
 };
 
