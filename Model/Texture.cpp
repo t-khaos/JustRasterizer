@@ -86,8 +86,8 @@ TGAColor Texture::GetColorBilinear(const Point2f &uv, int level = 0) {
 
     //按offset顺序重新排列
     std::vector<float> matrix = {
-            (1 - s) * (1 - t), (1 - s) * t,
-            s * (1 - t), s * t
+            (1 - s) * (1 - t), s * (1 - t),
+            (1 - s) * t, s * t
     };
     //正常插值顺序
     //00: (1 - s) * t,          01: s * t,

@@ -17,6 +17,6 @@ TGAColor DefaultShader::FragmentShading() {
     if (NdotL < 0)
         return TGAColor(0, 0, 0);
     //TGAColor color = diffuseMap->GetColor(uv, 3);
-    TGAColor color = diffuseMap->GetColorBilinear(uv, 0);
+    TGAColor color = diffuseMap->GetColorBilinear(uv, 3);
     return TGAColor(color.r * NdotL, color.g * NdotL, color.b * NdotL);
 }
