@@ -24,16 +24,13 @@
 > 13. [pbrt - 众所周知的圣经](https://www.pbr-book.org/3ed-2018/contents)
 
 ## TODO
-- 纹理尺寸问题
 - 分离出三角形/面类型
-- 分理出纹理类型
 - 四元数旋转
-- 二次线性插值
 - Edge Equation
-- 着色器类方法化
 - 光照模型
-- MSAA
 - 高斯模糊
+- Shadow Map
+- PCF软阴影
 
 
 ## Feature
@@ -42,7 +39,7 @@
   - [ ] Triangle 三角形
   - [ ] Mesh 网格
   - [x] Model 模型
-  - [ ] Texture 纹理
+  - [x] Texture 纹理
 - [x] 渲染器相关
   - [x] Film 胶卷
   - [x] Camera 相机
