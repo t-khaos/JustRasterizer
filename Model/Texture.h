@@ -84,29 +84,18 @@ struct Texture {
 
     //双线性插值
     TGAColor GetColorBilinear(const Point2f &uv, int level = 0) {
-        //  y ↑
-        //    +++++++++++++++++
-        //    |  u00  |  u01  |
-        //    |   ·   |   ·   |
-        //    |+++++++·+++++++|
-        //    |   ·   |   ·   |
-        //    |  u10  |  u11  |
-        //    +++++++++++++++++  → x
-
-
         //检查层级是否超过mipmap
         assert(level < mipmap.size());
-
-        auto &current = mipmap[level];
 
         //纹理坐标
         float x = uv.u * (width >> level);
         float y = uv.v * (height >> level);
 
+        //中心坐标
         int centerX = (x - int(x)) > 0.5f ? std::ceil(x) : std::floor(x);
         int centerY = (y - int(y)) > 0.5f ? std::ceil(y) : std::floor(y);
 
-        //左下像素纹理坐标
+        //左下纹理坐标
         float s = x - (centerX - 0.5f);
         float t = y - (centerY - 0.5f);
 
@@ -118,12 +107,8 @@ struct Texture {
         //正常插值顺序
         //00: (1 - s) * t,          01: s * t,
         //10: (1 - s) * (1 - t),    11: s * (1 - t)
-        float a =  (1 - s) * (1 - t)*100;
-        float b = (1 - s)* t*100;
-        float c = s * (1 - t)*100;
-        float d = s * t*100;
-        float num=a+b+c+d;
 
+        //卷积操作
         ConvKernel kernel(matrix);
         Color3f color;
         TGAColor pixel;
@@ -131,7 +116,7 @@ struct Texture {
             auto [offsetX, offsetY] = kernel.Next();
             offsetX = offsetX ? 1 : -1;
             offsetY = offsetY ? 1 : -1;
-            pixel = current->get(centerX + offsetX * 0.5f, centerY + offsetY * 0.5f);
+            pixel = mipmap[level]->get(centerX + offsetX * 0.5f, centerY + offsetY * 0.5f);
             color += Color3f(pixel.r * k, pixel.g * k, pixel.b * k);
         }
         return TGAColor(color.r, color.g, color.b);
