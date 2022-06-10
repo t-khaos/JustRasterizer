@@ -5,7 +5,7 @@ void Renderer::Render() const {
 
     Matrix4f M = Transform::Translate({0.0f, 0.0f, -3.0f})
                  * Transform::Scale({1.0f, 1.0f, 1.0f})
-                 * Transform::Rotate({0.0f, 0.0f, 0.0f});
+                 * Transform::Rotate({0.0f, 20.0f, 0.0f});
 
     Matrix4f V = Transform::Translate({0.0f, 0.0f, 0.0f})
                  * Transform::Rotate({0.0f, 0.0f, 0.0f})
