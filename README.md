@@ -1,7 +1,7 @@
 
 <h1 align="center">Just Rasterizer</h1>
 <p align="center"><img src="Output/output.jpg" alt="Logo" WIDTH="50%"></p>
-<p align="center">软光栅化渲染器</p>
+<p align="center">软光栅化渲染器 720p×720p Blinn-Phong光照模型 渲染结果</p>
 
 ## About
 
