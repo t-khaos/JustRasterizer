@@ -27,7 +27,7 @@
 - 抽象三角面
 - 高斯模糊
 
-## Rendering Pipeline
+## Feature
 - [x] The Application Stage
   - [ ] Hierarchical View Frustum Culling 层次视锥裁剪
 - [x] The Geometry Stage
