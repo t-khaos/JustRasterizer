@@ -24,39 +24,35 @@
 > 13. [pbrt - 众所周知的圣经](https://www.pbr-book.org/3ed-2018/contents)
 
 ## TODO
-- 分离出三角形/面类型
-- 四元数旋转
-- Edge Equation
-- 光照模型
+- 抽象三角面
 - 高斯模糊
-- Shadow Map
-- PCF软阴影
 
-
-## Feature
-- [ ] 模型相关
-  - [x] Vertex 顶点
-  - [ ] Triangle 三角形
-  - [ ] Mesh 网格
-  - [x] Model 模型
-  - [x] Texture 纹理
-- [x] 渲染器相关
-  - [x] Film 胶卷
-  - [x] Camera 相机
-  - [x] Scene 场景
-  - [x] Renderer 渲染器
-- [ ] 着色器相关
-  - [x] BaseShader 着色器基类
-  - [x] Default 默认着色器
-  - [ ] Phong 冯模型
-  - [ ] Blinn-Phong 布林冯模型
-  - [ ] Mircofacet 微表面模型
-- [x] 数学相关
-  - [x] Global 全局定义
-  - [x] Math 数据工具函数
-  - [x] Vector 向量模板
-  - [x] Matrix 矩阵模板
-  - [x] Transform 变换工具函数
+## Rendering Pipeline
+- [x] The Application Stage
+  - [ ] Hierarchical View Frustum Culling 层次视锥裁剪
+- [x] The Geometry Stage
+  - [x] Vertex Shading
+    - [x] Model Transform 模型变换
+    - [x] View Transform 视图变换
+    - [x] Projection Transform 透视投影变换
+    - [x] Normal Transform 法线变换
+  - [x] Clip Space
+    - [ ] CVV Culling CVV剔除
+    - [x] Backface Culling 背面剔除
+    - [x] Perspective Division 透视除法
+  - [x] NDC Space NDC空间
+    - [x] Viewport Transform 视口变换
+  - [x] ScreenSpace 屏幕空间
+- [x] The Rasterizer Stage
+  - [x] Triangle Setup
+  - [x] Triangle Traversal
+    - [x] Multi-sample Anti-Aliasing MSAA抗锯齿
+    - [x] Barycentric Interpolation 重心坐标插值
+  - [x] Pixel Shading
+    - [x] Blinn-Phong Illumination Model 布林冯光照模型
+  - [x] Merging Stage
+    - [x] Z-Buffer 深度测试
+  
 
 ## Dependence
 

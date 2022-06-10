@@ -77,19 +77,9 @@ void Renderer::Render() const {
 
             //齐次裁剪
             //-----------------------------------------------
-            //背面剔除 Face Culling
-            Vector3f viewDir(0, 0, 1); //NDC空间下观察方向为(0,0,1)
-            auto &A = triangle[0].position;
-            auto &B = triangle[1].position;
-            auto &C = triangle[2].position;
-            //模型三角面地顶点应遵循逆时针方向
-            //在NDC空间的左手坐标系下，叉乘出的法向量与观察方向不同向则为背面
-            auto faceNormal = Cross(B - A, C - A);
-            if (Dot(viewDir, faceNormal) < 0)
-                continue;
 
             //视口剔除 CVV Culling
-            for (int i = 0; i < 3; i++) {
+            for(int i=0;i<3;i++){
                 //TODO: 在CVV上的三角形，顶点应重新规划。
                 //简单剔除超出CVV的三角形
 /*                float w = vertex.w;
@@ -99,14 +89,30 @@ void Renderer::Render() const {
                     || w < near) {
 
                 }*/
+            }
 
-                //透视除法
-                //-----------------------------------------------
+            //背面剔除 Face Culling
+            Vector3f viewDir(0, 0, 1); //NDC空间下观察方向为(0,0,1)
+            Point3f &A = triangle[0].position;
+            Point3f &B = triangle[1].position;
+            Point3f &C = triangle[2].position;
+
+            Vector3f faceNormal = Cross(B - A, C - A);
+            if (Dot(viewDir, faceNormal) < 0)
+                continue;
+
+            //透视除法
+            //-----------------------------------------------
+            for (int i = 0; i < 3; i++) {
+
                 //为保证流水线的直观，故在这里做透视除法
                 triangle[i].position /= triangle[i].w;
+            }
 
-                //屏幕映射
-                //-----------------------------------------------
+            //屏幕映射
+            //-----------------------------------------------
+            for (int i = 0; i < 3; i++) {
+\
                 fragment[i] = Transform::Viewport(triangle[i].position, film->width, film->height);
             }
 
