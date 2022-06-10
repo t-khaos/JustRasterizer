@@ -4,6 +4,7 @@
 #include <cassert>
 #include <initializer_list>
 #include <cmath>
+#include <algorithm>
 
 //通用矢量模板
 //------------------------------------------
@@ -518,6 +519,15 @@ inline std::ostream &operator<<(std::ostream &stream, const Vector<N, T> &a) {
     }
     stream << "]";
     return stream;
+}
+
+template<size_t N, typename T>
+inline Vector<N,T> ClampVector(const Vector<N, T> &a, T left, T right) {
+    Vector<N,T> temp;
+    for (size_t i = 0; i < N; i++) {
+        temp[i] = std::clamp(a[i],left,right);
+    }
+    return temp;
 }
 
 //特化矢量别名

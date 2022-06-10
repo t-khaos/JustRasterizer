@@ -29,7 +29,7 @@ int main() {
     //模型
     auto model = std::make_shared<Model>("../Resource/Model/african_head.obj");
     //着色器
-    auto shader = std::make_shared<DefaultShader>();
+    auto shader = std::make_shared<BlinnPhongShader>();
     //纹理
     auto diffuseMap = std::make_shared<Texture>("../Resource/Texture/african_head_diffuse.tga", 1024, TGAImage::RGB, 3);
 

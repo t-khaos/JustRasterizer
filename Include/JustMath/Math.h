@@ -29,8 +29,8 @@ namespace Math {
         denominator = static_cast<float>((A.y - B.y) * C.x + (B.x - A.x) * C.y + A.x * B.y - B.x * A.y);
         ratios.z = numerator / denominator;
 
-        ratios.x = 1.0f -  ratios.y-ratios.z;
+        ratios.x = 1.0f - ratios.y - ratios.z;
 
-        return ratios.y >= 0 && ratios.z >= 0 && ratios.z + ratios.y <= 1.0f + EPSILON ;
+        return ratios.y >= 0 && ratios.z >= 0 && ratios.z + ratios.y <= 1.0f + EPSILON;
     }
 }

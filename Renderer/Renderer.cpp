@@ -13,11 +13,40 @@ void Renderer::Render() const {
 
     Matrix4f P = Transform::Perspective(camera->aspectRatio, camera->fov, camera->near, camera->far);
 
+
+    //在世界空间计算光照
+    //设置光源
+    PointLight pointLight;
+    pointLight.position = Vector3f(0, 0, 0);
+    pointLight.ambient = Vector3f(0.05f);
+    pointLight.diffuse = Vector3f(0.8f);
+    pointLight.specular = Vector3f(1.0f);
+    pointLight.constant = 1.0f;
+    pointLight.linear = 0.09f;
+    pointLight.quadratic = 0.032f;
+
+    DirectionLight dirLight;
+    dirLight.direction = Normalize(Vector3f(-2, -1, -2));
+    dirLight.ambient = Vector3f(0.05f);
+    dirLight.diffuse = Vector3f(0.4f);
+    dirLight.specular = Vector3f(0.4f);
+
+    EnvLight envLight;
+    envLight.ambient = Vector3f(0.5f);
+
     //渲染流水线
     //------------------------------------------------------------------------------------------------------------------------------------
 
     //遍历场景所有模型
     for (auto &model: scene->models) {
+
+        //设置光源
+        model->shader->pointLight = pointLight;
+        model->shader->dirLight = dirLight;
+        //设置摄像机位置
+        model->shader->cameraPos = camera->origin;
+        model->shader->envLight = envLight;
+
         //遍历模型所有三角面
         for (int j = 0; j < model->faces.size(); j++) {
             auto &face = model->faces[j];
@@ -25,24 +54,21 @@ void Renderer::Render() const {
             Vector<3, Vertex> triangle;
             Vector<3, Vector<2, float>> fragment;
 
+
             //遍历所有顶点
             for (int i = 0; i < 3; i++) {
                 auto &vertex = triangle[i];
                 vertex.position = model->positions[face[i].x];
                 vertex.uv = model->uvs[face[i].y];
                 vertex.normal = model->normals[face[i].z];
-
                 vertex.w = 1; //透视校正插值，保留w作为顶点深度值
 
                 //设置MVP变换矩阵
-                model->shader->MVP = P * V * M;
+                model->shader->ModelMatrix = M;
+                model->shader->ViewMatrix = V;
+                model->shader->ProjectionMatrix = P;
                 //设置法线变换矩阵：模型变换矩阵的伴随矩阵的转置
-                model->shader->N = Adjoint(M).Transpose();
-                //设置光照
-                model->shader->lightDir = Vector3f(0, 0, 1);
-                //设置摄像机位置
-                model->shader->cameraPos = camera->origin;
-
+                model->shader->NormalMatrix = Adjoint(M).Transpose();
 
                 //顶点着色
                 //-----------------------------------------------
@@ -149,10 +175,14 @@ void Renderer::Render() const {
                                  + triangle[1].uv * ratios.y
                                  + triangle[2].uv * ratios.z;
 
+                    //世界空间三维坐标插值
+                    Vector3f fragPos = triangle[0].worldPos * ratios.x
+                                       + triangle[1].worldPos * ratios.y
+                                       + triangle[2].worldPos * ratios.z;
 
-                    model->shader->normal = normal;
-                    //此处应该换成纹理的尺寸
-                    model->shader->uv = uv;
+                    model->shader->fragment.normal = normal;
+                    model->shader->fragment.uv = uv;
+                    model->shader->fragment.worldPos = fragPos;
 
                     //像素着色
                     //-----------------------------------------------
@@ -185,14 +215,13 @@ void Renderer::Render() const {
                             //子像素贡献颜色
                             color += Color3i(pixel.r, pixel.g, pixel.b);
                             update = true;
-                        }
-                        else{
+                        } else {
                             TGAColor subPixel = film->frameBufferMSAA2x2[index];
                             color += Color3i(subPixel.r, subPixel.g, subPixel.b);
                         }
                     }
                     //子像素发生变动才需要更新
-                    if(update){
+                    if (update) {
                         //平均各个子像素的颜色
                         color /= kernel.Size();
                         pixel = TGAColor(color.r, color.g, color.b);

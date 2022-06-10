@@ -32,4 +32,4 @@ add_executable(
 
         Shader/Shader.h
         Shader/DefaultShader.cpp
-        Model/ConvKernel.h Model/Texture.cpp)
+        Model/ConvKernel.h Model/Texture.cpp Shader/BlinnPhongShader.cpp Shader/Light.h)
