@@ -10,7 +10,7 @@
 struct Film {
     int width;
     int height;
-    TGAImage image;
+    std::shared_ptr<TGAImage> image;
     std::vector<float> depthBuffer;
     std::vector<TGAColor> frameBuffer;
 
@@ -19,7 +19,7 @@ struct Film {
 
     Film(const int &_w, const int &_h)
             : width(_w), height(_h) {
-        image = TGAImage(width, height, TGAImage::RGB);
+        image = std::make_shared<TGAImage>(width, height, TGAImage::RGB);
         depthBuffer = std::vector<float>(width * height, MAX_FLOAT);
         frameBuffer = std::vector<TGAColor>(width * height);
         depthBufferMSAA2x2 = std::vector<float>(width * height * 2 * 2, MAX_FLOAT);

@@ -5,7 +5,7 @@ void Renderer::Render() const {
 
     Matrix4f M = Transform::Translate({0.0f, 0.0f, -3.0f})
                  * Transform::Scale({1.0f, 1.0f, 1.0f})
-                 * Transform::Rotate({0.0f, 20.0f, 0.0f});
+                 * Transform::Rotate({0.0f, 0.0f, 0.0f});
 
     Matrix4f V = Transform::Translate({0.0f, 0.0f, 0.0f})
                  * Transform::Rotate({0.0f, 0.0f, 0.0f})
@@ -231,7 +231,7 @@ void Renderer::Render() const {
                         //平均各个子像素的颜色
                         color /= kernel.Size();
                         pixel = TGAColor(color.r, color.g, color.b);
-                        film->image.set(point.x, point.y, pixel);
+                        film->image->set(point.x, point.y, pixel);
                     }
 #endif
 

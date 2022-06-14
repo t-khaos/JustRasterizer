@@ -6,8 +6,8 @@
 #include "Model/Texture.h"
 
 int main() {
-    const int width = 720;
-    const int height = 720;
+    const int width = 1024;
+    const int height = 1024;
     const float aspectRatio = static_cast<float>(width) / height;
     const float fov = 45;
     const float near = 0.5f, far = 50.0f;
