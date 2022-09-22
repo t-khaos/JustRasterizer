@@ -3,10 +3,6 @@
 <p align="center"><img src="Output/output.jpg" alt="Logo" WIDTH="50%"></p>
 <p align="center">软光栅化渲染器 720p×720p Blinn-Phong光照模型 渲染结果</p>
 
-## About
-
-年轻人的第一台玩具级软光栅化渲染器，代码的设计和实现算法参考了许多的开源软渲染器和知乎等网站上的文章，感谢这些优秀且无私的作者。
-
 ## Reference
 
 > 1. [Ray Tracing in One Weekend Series](https://raytracing.github.io/)
